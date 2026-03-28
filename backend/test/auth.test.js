@@ -20,6 +20,7 @@ const testUser = {
   country: "Thailand",
   city: "Bangkok",
   nativeLanguage: "Thai",
+  timezone: "Asia/Bangkok", 
 };
 
 let token = "";
