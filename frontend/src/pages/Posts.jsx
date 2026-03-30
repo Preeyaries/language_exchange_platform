@@ -114,7 +114,6 @@ export default function Posts() {
           position: relative;
         }
 
-        /* Top bar */
         .cp-topbar {
           display: flex;
           align-items: center;
@@ -153,7 +152,6 @@ export default function Posts() {
         .cp-post-btn:hover:not(:disabled) { background: #5a8ff0; transform: translateY(-1px); }
         .cp-post-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* Card */
         .cp-card {
           background: #1a2d6b;
           border-radius: 24px;
@@ -167,7 +165,6 @@ export default function Posts() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* User row */
         .cp-user-row {
           display: flex;
           align-items: center;
@@ -209,7 +206,6 @@ export default function Posts() {
           font-weight: 600;
         }
 
-        /* Language bar */
         .cp-lang-bar {
           display: flex;
           align-items: center;
@@ -243,7 +239,6 @@ export default function Posts() {
           font-size: 14px;
         }
 
-        /* Textarea */
         .cp-textarea {
           width: 100%;
           background: #fff;
@@ -263,7 +258,6 @@ export default function Posts() {
 
         .cp-textarea::placeholder { color: #aab4cc; }
 
-        /* Topics */
         .cp-topics {
           display: flex;
           flex-wrap: wrap;
@@ -308,7 +302,6 @@ export default function Posts() {
           white-space: nowrap;
         }
 
-        /* Media buttons */
         .cp-media-row {
           display: flex;
           gap: 10px;
@@ -333,7 +326,6 @@ export default function Posts() {
 
         .cp-media-btn:hover { background: #1a2d6b; }
 
-        /* Message */
         .cp-msg {
           text-align: center;
           color: #ff8fa3;
@@ -448,5 +440,4 @@ export default function Posts() {
       </div>
     </>
   );
-}/ /   p o s t   c r u d   f e a t u r e  
- 
+}

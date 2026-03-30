@@ -34,7 +34,6 @@ function Login() {
     }
   };
 
-  // Redirect to backend OAuth routes (passport.js handles the rest)
   const handleGoogleLogin   = () => { window.location.href = `${BACKEND_URL}/api/auth/google`; };
   const handleFacebookLogin = () => { window.location.href = `${BACKEND_URL}/api/auth/facebook`; };
   const handleAppleLogin    = () => { window.location.href = `${BACKEND_URL}/api/auth/apple`; };
@@ -341,5 +340,4 @@ function Login() {
   );
 }
 
-export default Login;/ /   a u t h   f e a t u r e  
- 
+export default Login;

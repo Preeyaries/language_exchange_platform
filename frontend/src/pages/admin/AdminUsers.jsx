@@ -24,7 +24,7 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter]     = useState("All");
   const [page, setPage]         = useState(1);
   const [loading, setLoading]   = useState(true);
-  const [actionMenu, setActionMenu] = useState(null); // userId with open menu
+  const [actionMenu, setActionMenu] = useState(null);
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -38,7 +38,7 @@ export default function AdminUsers() {
       );
     }
     if (statusFilter !== "All") {
-      if (statusFilter === "Active")   result = result.filter(u => !u.isSuspended);
+      if (statusFilter === "Active")    result = result.filter(u => !u.isSuspended);
       if (statusFilter === "Suspended") result = result.filter(u => u.isSuspended);
     }
     if (roleFilter !== "All") {
@@ -59,7 +59,9 @@ export default function AdminUsers() {
 
   const handleSuspend = async (userId, suspend) => {
     try {
-      const endpoint = suspend ? `/admin/users/${userId}/suspend` : `/admin/users/${userId}/unsuspend`;
+      const endpoint = suspend
+        ? `/admin/users/${userId}/suspend`
+        : `/admin/users/${userId}/unsuspend`;
       await API.put(endpoint);
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, isSuspended: suspend } : u));
     } catch (err) { alert(err.response?.data?.message || "Action failed"); }
@@ -76,7 +78,6 @@ export default function AdminUsers() {
         .au-page-title { color: #1a2d6b; font-size: 22px; font-weight: 900; margin-bottom: 4px; }
         .au-page-sub   { color: #6b7fa3; font-size: 13px; font-weight: 600; }
 
-        /* Filter bar */
         .au-filter-bar {
           background: #1a2d6b;
           border-radius: 16px;
@@ -134,7 +135,6 @@ export default function AdminUsers() {
         }
         .au-add-btn:hover { background: #5a8ff0; }
 
-        /* Table */
         .au-table-wrap {
           background: #1a2d6b;
           border-radius: 16px;
@@ -181,18 +181,16 @@ export default function AdminUsers() {
         .au-user-name { color: #fff; font-weight: 800; font-size: 13px; }
         .au-user-email { color: rgba(255,255,255,0.4); font-size: 11px; }
 
-        /* Status badge */
         .badge {
           display: inline-flex; align-items: center;
           padding: 4px 10px; border-radius: 20px;
           font-size: 11px; font-weight: 800;
         }
-        .badge-active   { background: rgba(74,222,128,0.15); color: #4ade80; }
+        .badge-active    { background: rgba(74,222,128,0.15); color: #4ade80; }
         .badge-suspended { background: rgba(248,113,113,0.15); color: #f87171; }
-        .badge-admin    { background: rgba(74,127,224,0.2); color: #7ab3f5; }
-        .badge-user     { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+        .badge-admin     { background: rgba(74,127,224,0.2);  color: #7ab3f5; }
+        .badge-user      { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
 
-        /* Action menu */
         .au-action-wrap { position: relative; }
         .au-action-btn {
           background: none; border: none; cursor: pointer;
@@ -229,7 +227,6 @@ export default function AdminUsers() {
         .au-dropdown-item.danger { color: #f87171; }
         .au-dropdown-item.danger:hover { background: rgba(255,100,100,0.1); }
 
-        /* Pagination */
         .au-pagination {
           display: flex; align-items: center; justify-content: space-between;
           padding: 0 4px;
@@ -365,5 +362,4 @@ export default function AdminUsers() {
       </div>
     </AdminLayout>
   );
-}/ /   a d m i n   p a n e l   f e a t u r e  
- 
+}

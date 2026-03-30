@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import API from "../api/api";
 
-// CEFR level → dot display (5 dots)
 const LEVEL_DOTS = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 5 };
 
-// Language → flag emoji
 const LANG_FLAG = {
   English: "🇬🇧", Thai: "🇹🇭", Japanese: "🇯🇵", Korean: "🇰🇷",
   "Chinese (Mandarin)": "🇨🇳", "Chinese (Cantonese)": "🇨🇳",
@@ -14,11 +12,6 @@ const LANG_FLAG = {
   Vietnamese: "🇻🇳", Indonesian: "🇮🇩", Malay: "🇲🇾",
   Dutch: "🇳🇱", Swedish: "🇸🇪", Polish: "🇵🇱",
 };
-
-const STATIC_MAP_URL = (city, country) =>
-  `https://staticmap.openstreetmap.de/staticmap.php?center=${encodeURIComponent(
-    city + "," + country
-  )}&zoom=13&size=400x200&maptype=mapnik`;
 
 function LangDots({ level }) {
   const filled = LEVEL_DOTS[level] || 1;
@@ -51,8 +44,8 @@ export default function Profile() {
   const [followingCount, setFollowingCount] = useState(0);
   const [message, setMessage]     = useState("");
   const [loading, setLoading]     = useState(true);
-  const [menuPostId, setMenuPostId]   = useState(null);   // which post's 3-dot menu is open
-  const [editPost, setEditPost]       = useState(null);   // post being edited { _id, text, topics }
+  const [menuPostId, setMenuPostId]   = useState(null);
+  const [editPost, setEditPost]       = useState(null);
   const [editText, setEditText]       = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [likedPosts, setLikedPosts]   = useState(new Set());
@@ -77,21 +70,19 @@ export default function Profile() {
       setUser(res.data.user || { name: me?.name, email: me?.email });
       setIsFollowing(res.data.isFollowing || false);
 
-      // Fetch real followers/following counts
       try {
         if (isOwn) {
           const meRes = await API.get("/auth/me");
           setFollowersCount(meRes.data.followers?.length || 0);
           setFollowingCount(meRes.data.following?.length || 0);
         } else {
-          // For other users, check follow status endpoint which returns counts
           const statusRes = await API.get(`/follow/status/${id}`);
           setIsFollowing(statusRes.data.isFollowing || false);
           setFollowersCount(res.data.followersCount || res.data.user?.followers?.length || 0);
           setFollowingCount(res.data.followingCount || res.data.user?.following?.length || 0);
         }
       } catch {
-        // fallback to 0 if endpoints not available
+        // fallback to 0
       }
     } catch (err) {
       setMessage("Could not load profile.");
@@ -155,10 +146,10 @@ export default function Profile() {
 
   const timeAgo = (date) => {
     const diff = Math.floor((Date.now() - new Date(date)) / 1000);
-    if (diff < 60)  return `${diff}s`;
-    if (diff < 3600) return `${Math.floor(diff/60)}m`;
-    if (diff < 86400) return `${Math.floor(diff/3600)}h`;
-    return `${Math.floor(diff/86400)} Days`;
+    if (diff < 60)    return `${diff}s`;
+    if (diff < 3600)  return `${Math.floor(diff / 60)}m`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+    return `${Math.floor(diff / 86400)} Days`;
   };
 
   const handleFollow = async () => {
@@ -192,17 +183,17 @@ export default function Profile() {
     );
   }
 
-  const displayName = user?.name || "User";
-  const handle = "@" + (user?.email?.split("@")[0] || "user");
-  const avatar = profile?.profilePicture || null;
-  const city = profile?.city || "";
-  const country = profile?.country || "";
-  const nativeLang = profile?.nativeLanguage || "";
+  const displayName  = user?.name || "User";
+  const handle       = "@" + (user?.email?.split("@")[0] || "user");
+  const avatar       = profile?.profilePicture || null;
+  const city         = profile?.city || "";
+  const country      = profile?.country || "";
+  const nativeLang   = profile?.nativeLanguage || "";
   const learningLangs = profile?.languagesLearning || [];
-  const interests = profile?.interests || [];
-  const bio = profile?.bio || "";
-  const ageRange = profile?.ageRange || "";
-  const gender = profile?.gender || "";
+  const interests    = profile?.interests || [];
+  const bio          = profile?.bio || "";
+  const ageRange     = profile?.ageRange || "";
+  const gender       = profile?.gender || "";
 
   return (
     <>
@@ -229,7 +220,6 @@ export default function Profile() {
           overflow: hidden;
         }
 
-        /* Map header */
         .map-header {
           position: relative;
           height: 200px;
@@ -290,7 +280,6 @@ export default function Profile() {
           backdrop-filter: blur(8px);
         }
 
-        /* Profile card */
         .profile-card {
           background: linear-gradient(180deg, #1a2d6b 0%, #0f1c3f 100%);
           border-radius: 28px 28px 0 0;
@@ -305,7 +294,6 @@ export default function Profile() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Avatar */
         .avatar-wrap {
           display: flex;
           justify-content: center;
@@ -329,7 +317,6 @@ export default function Profile() {
           overflow: hidden;
         }
 
-        /* Stats row */
         .stats-row {
           display: flex;
           align-items: center;
@@ -337,42 +324,14 @@ export default function Profile() {
           margin-bottom: 12px;
         }
 
-        .stat {
-          text-align: center;
-          flex: 1;
-        }
+        .stat { text-align: center; flex: 1; }
+        .stat-num { color: #fff; font-size: 20px; font-weight: 900; }
+        .stat-label { color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 600; }
 
-        .stat-num {
-          color: #fff;
-          font-size: 20px;
-          font-weight: 900;
-        }
+        .name-center { flex: 2; text-align: center; }
+        .display-name { color: #fff; font-size: 22px; font-weight: 900; letter-spacing: -0.3px; }
+        .handle { color: rgba(255,255,255,0.45); font-size: 13px; font-weight: 600; }
 
-        .stat-label {
-          color: rgba(255,255,255,0.5);
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .name-center {
-          flex: 2;
-          text-align: center;
-        }
-
-        .display-name {
-          color: #fff;
-          font-size: 22px;
-          font-weight: 900;
-          letter-spacing: -0.3px;
-        }
-
-        .handle {
-          color: rgba(255,255,255,0.45);
-          font-size: 13px;
-          font-weight: 600;
-        }
-
-        /* Bio */
         .profile-bio {
           text-align: center;
           color: rgba(255,255,255,0.7);
@@ -383,7 +342,6 @@ export default function Profile() {
           padding: 0 8px;
         }
 
-        /* Language flags row */
         .lang-row {
           display: flex;
           align-items: center;
@@ -393,33 +351,12 @@ export default function Profile() {
           flex-wrap: wrap;
         }
 
-        .lang-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-        }
-
+        .lang-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .lang-flag { font-size: 28px; }
+        .lang-name { color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 700; }
+        .lang-arrow { color: rgba(255,255,255,0.4); font-size: 18px; margin-bottom: 12px; }
 
-        .lang-name {
-          color: rgba(255,255,255,0.7);
-          font-size: 11px;
-          font-weight: 700;
-        }
-
-        .lang-arrow {
-          color: rgba(255,255,255,0.4);
-          font-size: 18px;
-          margin-bottom: 12px;
-        }
-
-        /* Action buttons */
-        .action-row {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 24px;
-        }
+        .action-row { display: flex; gap: 12px; margin-bottom: 24px; }
 
         .btn-follow {
           flex: 1;
@@ -456,7 +393,6 @@ export default function Profile() {
 
         .btn-message:hover { background: #f0f4ff; transform: translateY(-1px); }
 
-        /* Tabs */
         .tabs {
           display: flex;
           border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -477,9 +413,7 @@ export default function Profile() {
           transition: color 0.2s;
         }
 
-        .tab-btn.active {
-          color: #fff;
-        }
+        .tab-btn.active { color: #fff; }
 
         .tab-btn.active::after {
           content: '';
@@ -492,13 +426,7 @@ export default function Profile() {
           background: #4a7fe0;
         }
 
-        /* About me content */
-        .section-title {
-          color: #fff;
-          font-size: 15px;
-          font-weight: 900;
-          margin-bottom: 12px;
-        }
+        .section-title { color: #fff; font-size: 15px; font-weight: 900; margin-bottom: 12px; }
 
         .info-row {
           display: flex;
@@ -512,18 +440,9 @@ export default function Profile() {
 
         .info-icon { font-size: 18px; flex-shrink: 0; }
 
-        .divider-line {
-          height: 1px;
-          background: rgba(255,255,255,0.08);
-          margin: 20px 0;
-        }
+        .divider-line { height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0; }
 
-        /* Interest chips */
-        .chips-wrap {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
+        .chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 
         .chip {
           background: rgba(255,255,255,0.1);
@@ -534,7 +453,6 @@ export default function Profile() {
           font-weight: 700;
         }
 
-        /* Post feed */
         .post-stats-bar {
           display: flex;
           align-items: center;
@@ -544,17 +462,8 @@ export default function Profile() {
           margin-bottom: 2px;
         }
 
-        .post-stats-left {
-          color: rgba(255,255,255,0.45);
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .post-stats-right {
-          color: rgba(255,255,255,0.45);
-          font-size: 12px;
-          font-weight: 700;
-        }
+        .post-stats-left  { color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 700; }
+        .post-stats-right { color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 700; }
 
         .post-card {
           background: transparent;
@@ -564,210 +473,116 @@ export default function Profile() {
 
         .post-card:last-child { border-bottom: none; }
 
-        .post-author-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 10px;
-        }
+        .post-author-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 
         .post-author-avatar {
-          width: 44px;
-          height: 44px;
+          width: 44px; height: 44px;
           border-radius: 50%;
           background: linear-gradient(135deg, #4a7fe0, #2a4a8f);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 17px;
-          font-weight: 800;
-          color: white;
-          flex-shrink: 0;
-          overflow: hidden;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 17px; font-weight: 800; color: white;
+          flex-shrink: 0; overflow: hidden;
           border: 2px solid rgba(255,255,255,0.15);
         }
 
         .post-author-info { flex: 1; }
+        .post-author-name { color: #fff; font-size: 14px; font-weight: 800; margin-bottom: 2px; }
+        .post-author-handle { color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 600; }
 
-        .post-author-name {
-          color: #fff;
-          font-size: 14px;
-          font-weight: 800;
-          margin-bottom: 2px;
-        }
-
-        .post-author-handle {
-          color: rgba(255,255,255,0.4);
-          font-size: 11px;
-          font-weight: 600;
-        }
-
-        .post-author-langs {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          gap: 5px;
-          margin-top: 4px;
-          flex-wrap: nowrap;
-          line-height: 1;
-        }
-
-        .post-lang-abbr {
-          color: rgba(255,255,255,0.85);
-          font-size: 11px;
-          font-weight: 800;
-          line-height: 1;
-          vertical-align: middle;
-        }
-
-        .post-time-menu {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-shrink: 0;
-        }
-
-        .post-time {
-          color: rgba(255,255,255,0.35);
-          font-size: 12px;
-          font-weight: 600;
-        }
+        .post-time-menu { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .post-time { color: rgba(255,255,255,0.35); font-size: 12px; font-weight: 600; }
 
         .post-menu-btn {
-          background: none;
-          border: none;
+          background: none; border: none;
           color: rgba(255,255,255,0.4);
-          font-size: 20px;
-          cursor: pointer;
-          padding: 0 2px;
-          line-height: 1;
+          font-size: 20px; cursor: pointer;
+          padding: 0 2px; line-height: 1;
         }
 
         .post-content {
           color: rgba(255,255,255,0.85);
-          font-size: 14px;
-          font-weight: 600;
-          line-height: 1.55;
-          margin-bottom: 12px;
+          font-size: 14px; font-weight: 600;
+          line-height: 1.55; margin-bottom: 12px;
         }
 
         .post-action-row {
-          display: flex;
-          align-items: center;
-          gap: 0;
+          display: flex; align-items: center; gap: 0;
           padding: 8px 0 10px;
           border-top: 1px solid rgba(255,255,255,0.06);
         }
 
         .post-action-btn {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          background: none;
-          border: none;
+          flex: 1; display: flex; align-items: center;
+          justify-content: center; gap: 6px;
+          background: none; border: none;
           color: rgba(255,255,255,0.5);
           font-family: 'Nunito', sans-serif;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          padding: 6px 0;
+          font-size: 13px; font-weight: 700;
+          cursor: pointer; padding: 6px 0;
           transition: color 0.2s;
         }
 
         .post-action-btn:hover { color: rgba(255,255,255,0.85); }
         .post-action-btn.liked { color: #f87171; }
 
-        .post-action-sep {
-          width: 1px;
-          height: 16px;
-          background: rgba(255,255,255,0.1);
-        }
+        .post-action-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.1); }
 
         .post-likes-row {
-          display: flex;
-          justify-content: flex-end;
+          display: flex; justify-content: flex-end;
           color: rgba(255,255,255,0.35);
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 12px; font-weight: 700;
           margin-bottom: 6px;
         }
 
         .empty-state {
           text-align: center;
           color: rgba(255,255,255,0.3);
-          font-size: 14px;
-          font-weight: 600;
+          font-size: 14px; font-weight: 600;
           padding: 32px 0;
         }
 
-        /* Bottom nav */
         .bottom-nav {
-          position: fixed;
-          bottom: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 100%;
-          max-width: 390px;
+          position: fixed; bottom: 0;
+          left: 50%; transform: translateX(-50%);
+          width: 100%; max-width: 390px;
           background: linear-gradient(180deg, rgba(15,28,63,0) 0%, rgba(10,20,50,0.97) 40%);
           padding: 8px 0 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-around;
+          display: flex; align-items: center; justify-content: space-around;
           z-index: 100;
         }
 
         .nav-btn {
-          background: none;
-          border: none;
+          background: none; border: none;
           color: rgba(255,255,255,0.4);
-          font-size: 22px;
-          cursor: pointer;
-          padding: 8px 12px;
-          transition: color 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          font-size: 22px; cursor: pointer;
+          padding: 8px 12px; transition: color 0.2s;
+          display: flex; align-items: center; justify-content: center;
         }
 
         .nav-btn:hover { color: rgba(255,255,255,0.8); }
         .nav-btn.active { color: #fff; }
 
         .nav-plus {
-          width: 52px;
-          height: 52px;
+          width: 52px; height: 52px;
           border-radius: 50%;
-          background: #4a7fe0;
-          border: none;
-          color: white;
-          font-size: 26px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          background: #4a7fe0; border: none;
+          color: white; font-size: 26px; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
           box-shadow: 0 4px 20px rgba(74,127,224,0.5);
-          transition: transform 0.15s;
-          margin-bottom: 4px;
+          transition: transform 0.15s; margin-bottom: 4px;
         }
 
         .nav-plus:hover { transform: scale(1.08); }
 
-        /* Message toast */
         .toast {
-          position: fixed;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
+          position: fixed; top: 20px;
+          left: 50%; transform: translateX(-50%);
           background: rgba(255,80,80,0.9);
-          color: white;
-          padding: 10px 20px;
+          color: white; padding: 10px 20px;
           border-radius: 20px;
           font-family: 'Nunito', sans-serif;
-          font-size: 13px;
-          font-weight: 700;
-          z-index: 999;
-          backdrop-filter: blur(10px);
+          font-size: 13px; font-weight: 700;
+          z-index: 999; backdrop-filter: blur(10px);
         }
       `}</style>
 
@@ -826,7 +641,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Bio */}
             {bio && <p className="profile-bio">{bio}</p>}
 
             {/* Language flags */}
@@ -878,7 +692,7 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* About me tab */}
+            {/* About tab */}
             {tab === "about" && (
               <div>
                 <p className="section-title">Personal Info</p>
@@ -912,7 +726,6 @@ export default function Profile() {
             {/* Posts tab */}
             {tab === "posts" && (
               <div>
-                {/* Stats bar */}
                 {posts.length > 0 && (
                   <div className="post-stats-bar">
                     <span className="post-stats-left">{posts.length} Posts</span>
@@ -943,11 +756,10 @@ export default function Profile() {
                     {posts.map((post) => (
                       <div key={post._id} className="post-card" style={{ position: "relative" }}>
 
-                        {/* Author row */}
                         <div className="post-author-row">
-                          {/* Avatar */}
                           {profile?.profilePicture ? (
-                            <img className="post-author-avatar" src={profile.profilePicture} alt="" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} />
+                            <img className="post-author-avatar" src={profile.profilePicture} alt=""
+                              style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} />
                           ) : (
                             <div className="post-author-avatar">{displayName.charAt(0)}</div>
                           )}
@@ -955,7 +767,6 @@ export default function Profile() {
                           <div className="post-author-info">
                             <div className="post-author-name">{displayName}</div>
                             <div className="post-author-handle">{handle}</div>
-                            {/* Lang bar */}
                             <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:4 }}>
                               {nativeLang && (
                                 <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
@@ -969,7 +780,7 @@ export default function Profile() {
                               {learningLangs.length > 0 && (
                                 <span style={{ color:"rgba(255,255,255,0.4)", fontSize:14 }}>⇌</span>
                               )}
-                              {learningLangs.map((l,i) => {
+                              {learningLangs.map((l, i) => {
                                 const filled = { A1:1,A2:2,B1:3,B2:4,C1:5,C2:5 }[l.level] || 1;
                                 return (
                                   <span key={i} style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -987,7 +798,6 @@ export default function Profile() {
                             </div>
                           </div>
 
-                          {/* Time + 3-dot */}
                           <div className="post-time-menu">
                             <span className="post-time">{timeAgo(post.createdAt)}</span>
                             {isOwn && (
@@ -1030,10 +840,8 @@ export default function Profile() {
                           </div>
                         )}
 
-                        {/* Post text */}
                         <p className="post-content">{post.text}</p>
 
-                        {/* Topics */}
                         {post.topics?.length > 0 && (
                           <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:10 }}>
                             {post.topics.map(t=>(
@@ -1046,12 +854,10 @@ export default function Profile() {
                           </div>
                         )}
 
-                        {/* Likes count */}
                         <div className="post-likes-row">
                           <span>{(post.likes || 0) + (likedPosts.has(post._id) ? 1 : 0)} Likes &nbsp; {post.comments?.length || 0} comments</span>
                         </div>
 
-                        {/* Action row */}
                         <div className="post-action-row">
                           <button
                             className={`post-action-btn ${likedPosts.has(post._id) ? "liked" : ""}`}
@@ -1078,14 +884,13 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Click outside to close menu */}
             {menuPostId && (
               <div onClick={() => setMenuPostId(null)}
                 style={{ position:"fixed", inset:0, zIndex:40 }}/>
             )}
           </div>
 
-          {/* ── Edit modal ── */}
+          {/* Edit modal */}
           {editPost && (
             <div style={{
               position: "fixed", inset: 0, zIndex: 200,
@@ -1102,13 +907,13 @@ export default function Profile() {
                 boxShadow: "0 -8px 32px rgba(0,0,0,0.4)",
                 animation: "fadeUp 0.25s ease both",
               }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <span style={{ color: "#fff", fontFamily: "Nunito, sans-serif", fontSize: 16, fontWeight: 800 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                  <span style={{ color:"#fff", fontFamily:"Nunito, sans-serif", fontSize:16, fontWeight:800 }}>
                     Edit Post
                   </span>
                   <button onClick={() => setEditPost(null)} style={{
-                    background: "none", border: "none", color: "rgba(255,255,255,0.45)",
-                    fontSize: 22, cursor: "pointer", lineHeight: 1,
+                    background:"none", border:"none", color:"rgba(255,255,255,0.45)",
+                    fontSize:22, cursor:"pointer", lineHeight:1,
                   }}>×</button>
                 </div>
 
@@ -1117,25 +922,25 @@ export default function Profile() {
                   onChange={(e) => setEditText(e.target.value)}
                   maxLength={1000}
                   style={{
-                    width: "100%", background: "rgba(255,255,255,0.1)",
-                    border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 16,
-                    padding: 14, color: "#fff", fontFamily: "Nunito, sans-serif",
-                    fontSize: 14, fontWeight: 600, resize: "none", minHeight: 120,
-                    outline: "none", boxSizing: "border-box", lineHeight: 1.6,
+                    width:"100%", background:"rgba(255,255,255,0.1)",
+                    border:"1.5px solid rgba(255,255,255,0.15)", borderRadius:16,
+                    padding:14, color:"#fff", fontFamily:"Nunito, sans-serif",
+                    fontSize:14, fontWeight:600, resize:"none", minHeight:120,
+                    outline:"none", boxSizing:"border-box", lineHeight:1.6,
                   }}
                 />
-                <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+                <div style={{ display:"flex", gap:10, marginTop:14 }}>
                   <button onClick={() => setEditPost(null)} style={{
-                    flex: 1, background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.15)",
-                    borderRadius: 14, padding: 13, color: "rgba(255,255,255,0.7)",
-                    fontFamily: "Nunito, sans-serif", fontSize: 14, fontWeight: 800, cursor: "pointer",
+                    flex:1, background:"rgba(255,255,255,0.1)", border:"1.5px solid rgba(255,255,255,0.15)",
+                    borderRadius:14, padding:13, color:"rgba(255,255,255,0.7)",
+                    fontFamily:"Nunito, sans-serif", fontSize:14, fontWeight:800, cursor:"pointer",
                   }}>
                     Cancel
                   </button>
                   <button onClick={handleEditSave} disabled={editLoading} style={{
-                    flex: 2, background: "#4a7fe0", border: "none", borderRadius: 14,
-                    padding: 13, color: "#fff", fontFamily: "Nunito, sans-serif",
-                    fontSize: 14, fontWeight: 800, cursor: "pointer",
+                    flex:2, background:"#4a7fe0", border:"none", borderRadius:14,
+                    padding:13, color:"#fff", fontFamily:"Nunito, sans-serif",
+                    fontSize:14, fontWeight:800, cursor:"pointer",
                     opacity: editLoading ? 0.7 : 1,
                   }}>
                     {editLoading ? "Saving..." : "Save Changes"}
@@ -1168,5 +973,4 @@ export default function Profile() {
       </div>
     </>
   );
-}/ /   p r o f i l e   c r u d   f e a t u r e  
- 
+}
