@@ -34,3 +34,29 @@ jobs:
       - name: Run tests
         working-directory: ./backend
         run: npm test
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: yarn install
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: yarn build
+
+      - name: Restart backend with PM2
+        run: pm2 restart bello-backend || pm2 start backend/server.js --name bello-backend
+
+      - name: Restart nginx
+        run: sudo systemctl restart nginx
