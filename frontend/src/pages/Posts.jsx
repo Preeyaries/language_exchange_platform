@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/api";
+import BottomNav from "../components/BottomNav";
+import PhoneFrame from "../components/PhoneFrame";
 
 const LANG_FLAG = {
   English: "🇬🇧", Thai: "🇹🇭", Japanese: "🇯🇵", Korean: "🇰🇷",
@@ -16,15 +18,12 @@ const ALL_TOPICS = ["Exercise", "Movie", "Podcast", "Book", "Food", "Music",
   "Travel", "Gaming", "Art", "Fashion", "Tech", "Sports", "Photography",
   "Cooking", "Dance", "Anime", "Reading", "Culture"];
 
-function LangDots({ level, color = "#4a7fe0" }) {
+function LangDots({ level, color = "bg-[#4a7fe0]" }) {
   const filled = LEVEL_DOTS[level] || 1;
   return (
-    <div style={{ display: "flex", gap: 3, marginTop: 3 }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} style={{
-          width: 6, height: 6, borderRadius: "50%",
-          background: i <= filled ? color : "rgba(255,255,255,0.2)",
-        }} />
+    <div className="flex gap-0.5 mt-0.5">
+      {[1,2,3,4,5].map(i => (
+        <div key={i} className={`w-1.5 h-1.5 rounded-full ${i <= filled ? color : "bg-white/20"}`} />
       ))}
     </div>
   );
@@ -32,41 +31,31 @@ function LangDots({ level, color = "#4a7fe0" }) {
 
 export default function Posts() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
-  const [user, setUser]       = useState(null);
-  const [text, setText]       = useState("");
+  const [profile, setProfile]             = useState(null);
+  const [user, setUser]                   = useState(null);
+  const [text, setText]                   = useState("");
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [showAllTopics, setShowAllTopics]   = useState(false);
-  const [posting, setPosting] = useState(false);
-  const [message, setMessage] = useState("");
+  const [posting, setPosting]             = useState(false);
+  const [message, setMessage]             = useState("");
 
   const me = JSON.parse(localStorage.getItem("user") || "{}");
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
   const fetchProfile = async () => {
     try {
       const res = await API.get("/profile");
       setProfile(res.data.profile || res.data);
       setUser(res.data.user || me);
-    } catch {
-      setUser(me);
-    }
+    } catch { setUser(me); }
   };
 
-  const toggleTopic = (t) => {
-    setSelectedTopics((prev) =>
-      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
-    );
-  };
+  const toggleTopic = (t) =>
+    setSelectedTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
 
   const handlePost = async () => {
-    if (!text.trim()) {
-      setMessage("Please write something first.");
-      return;
-    }
+    if (!text.trim()) { setMessage("Please write something first."); return; }
     setPosting(true);
     try {
       await API.post("/posts", {
@@ -78,366 +67,140 @@ export default function Posts() {
       navigate("/profile");
     } catch (err) {
       setMessage(err.response?.data?.message || "Post failed");
-    } finally {
-      setPosting(false);
-    }
+    } finally { setPosting(false); }
   };
 
-  const displayName  = user?.name || "User";
-  const handle       = "@" + (user?.email?.split("@")[0] || "user");
-  const avatar       = profile?.profilePicture || null;
-  const nativeLang   = profile?.nativeLanguage || "";
+  const displayName   = user?.name || "User";
+  const handle        = "@" + (user?.email?.split("@")[0] || "user");
+  const avatar        = profile?.profilePicture || null;
+  const nativeLang    = profile?.nativeLanguage || "";
   const learningLangs = profile?.languagesLearning || [];
-
   const visibleTopics = showAllTopics ? ALL_TOPICS : ALL_TOPICS.slice(0, 5);
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .cp-root {
-          min-height: 100vh;
-          background: #e8eef8;
-          font-family: 'Nunito', sans-serif;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-        }
+    <PhoneFrame>
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="w-full px-4 py-8 bg-gradient-to-br from-[#e8eef8] via-[#e8eef8] to-[#e8eef8] ,inset_0_1px_0_#e8eef8]">
 
-        .cp-phone {
-          width: 100%;
-          max-width: 390px;
-          min-height: 100vh;
-          background: #e8eef8;
-          position: relative;
-        }
 
-        .cp-topbar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 16px 20px 12px;
-          background: #e8eef8;
-        }
+          <div className="w-full max-w-[390px] min-h-screen bg-[#e8eef8] relative">
 
-        .cp-back {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          background: none;
-          border: none;
-          color: #1a2d6b;
-          font-family: 'Nunito', sans-serif;
-          font-size: 16px;
-          font-weight: 700;
-          cursor: pointer;
-        }
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-5 py-4 bg-[#e8eef8]">
+              <button onClick={() => navigate(-1)}
+                className="flex items-center gap-1.5 bg-transparent border-0 text-[#1a2d6b] text-base font-bold cursor-pointer">
+                ‹ Create post
+              </button>
+              <button onClick={handlePost} disabled={posting}
+                className="bg-[#4a7fe0] border-0 rounded-full px-5 py-2.5 text-white text-sm font-extrabold cursor-pointer
+                  shadow-[0_4px_14px_rgba(74,127,224,0.4)] hover:bg-[#5a8ff0] hover:-translate-y-px
+                  disabled:opacity-60 disabled:cursor-not-allowed transition-all">
+                {posting ? "Posting..." : "Post"}
+              </button>
+            </div>
 
-        .cp-post-btn {
-          background: #4a7fe0;
-          border: none;
-          border-radius: 20px;
-          padding: 9px 22px;
-          color: #fff;
-          font-family: 'Nunito', sans-serif;
-          font-size: 14px;
-          font-weight: 800;
-          cursor: pointer;
-          transition: background 0.2s, transform 0.15s;
-          box-shadow: 0 4px 14px rgba(74,127,224,0.4);
-        }
+            {/* Card */}
+            <div className="mx-4 bg-[#1a2d6b] rounded-3xl p-[18px] animate-[fadeUp_0.35s_ease_both]">
 
-        .cp-post-btn:hover:not(:disabled) { background: #5a8ff0; transform: translateY(-1px); }
-        .cp-post-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+              {/* User row */}
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
+                {avatar ? (
+                  <img src={avatar} alt="avatar"
+                    className="w-[52px] h-[52px] rounded-full border-[3px] border-white/20 object-cover shrink-0" />
+                ) : (
+                  <div className="w-[52px] h-[52px] rounded-full border-[3px] border-white/20 bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f]
+                    flex items-center justify-center text-xl font-extrabold text-white shrink-0">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
 
-        .cp-card {
-          background: #1a2d6b;
-          border-radius: 24px;
-          margin: 0 16px;
-          padding: 18px;
-          animation: fadeUp 0.35s ease both;
-        }
+                <div className="flex-1">
+                  <div className="text-white text-[15px] font-extrabold mb-0.5">{displayName}</div>
+                  <div className="text-white/45 text-xs font-semibold mb-2">{handle}</div>
 
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .cp-user-row {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 16px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .cp-avatar {
-          width: 52px;
-          height: 52px;
-          border-radius: 50%;
-          border: 3px solid rgba(255,255,255,0.2);
-          object-fit: cover;
-          background: linear-gradient(135deg, #4a7fe0, #2a4a8f);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          font-weight: 800;
-          color: white;
-          flex-shrink: 0;
-          overflow: hidden;
-        }
-
-        .cp-user-info { flex: 1; }
-
-        .cp-name {
-          color: #fff;
-          font-size: 15px;
-          font-weight: 800;
-          margin-bottom: 2px;
-        }
-
-        .cp-handle {
-          color: rgba(255,255,255,0.45);
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .cp-lang-bar {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-top: 8px;
-          flex-wrap: wrap;
-        }
-
-        .cp-lang-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .cp-lang-abbr {
-          color: rgba(255,255,255,0.85);
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.3px;
-        }
-
-        .cp-lang-sep {
-          width: 1px;
-          height: 28px;
-          background: rgba(255,255,255,0.2);
-          margin: 0 4px;
-        }
-
-        .cp-arrow {
-          color: rgba(255,255,255,0.45);
-          font-size: 14px;
-        }
-
-        .cp-textarea {
-          width: 100%;
-          background: #fff;
-          border: none;
-          border-radius: 16px;
-          padding: 16px;
-          font-family: 'Nunito', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          color: #1a2d6b;
-          resize: none;
-          min-height: 140px;
-          outline: none;
-          margin-bottom: 14px;
-          line-height: 1.6;
-        }
-
-        .cp-textarea::placeholder { color: #aab4cc; }
-
-        .cp-topics {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-bottom: 14px;
-        }
-
-        .cp-chip {
-          background: rgba(255,255,255,0.12);
-          border: 1.5px solid rgba(255,255,255,0.15);
-          border-radius: 20px;
-          padding: 6px 14px;
-          color: rgba(255,255,255,0.6);
-          font-family: 'Nunito', sans-serif;
-          font-size: 12px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s;
-          white-space: nowrap;
-        }
-
-        .cp-chip.selected {
-          background: #4a7fe0;
-          border-color: #4a7fe0;
-          color: #fff;
-        }
-
-        .cp-chip:hover:not(.selected) {
-          background: rgba(255,255,255,0.18);
-        }
-
-        .cp-see-more {
-          background: rgba(255,255,255,0.08);
-          border: 1.5px solid rgba(255,255,255,0.12);
-          border-radius: 20px;
-          padding: 6px 14px;
-          color: rgba(255,255,255,0.4);
-          font-family: 'Nunito', sans-serif;
-          font-size: 12px;
-          font-weight: 700;
-          cursor: pointer;
-          white-space: nowrap;
-        }
-
-        .cp-media-row {
-          display: flex;
-          gap: 10px;
-          padding-top: 12px;
-          border-top: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .cp-media-btn {
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          background: #0f1c3f;
-          border: none;
-          color: rgba(255,255,255,0.7);
-          font-size: 16px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.2s;
-        }
-
-        .cp-media-btn:hover { background: #1a2d6b; }
-
-        .cp-msg {
-          text-align: center;
-          color: #ff8fa3;
-          font-size: 13px;
-          font-weight: 700;
-          margin: 12px 16px 0;
-        }
-      `}</style>
-
-      <div className="cp-root">
-        <div className="cp-phone">
-
-          {/* Top bar */}
-          <div className="cp-topbar">
-            <button className="cp-back" onClick={() => navigate(-1)}>
-              ‹ Create post
-            </button>
-            <button className="cp-post-btn" onClick={handlePost} disabled={posting}>
-              {posting ? "Posting..." : "Post"}
-            </button>
-          </div>
-
-          {/* Card */}
-          <div className="cp-card">
-
-            {/* User row */}
-            <div className="cp-user-row">
-              {avatar ? (
-                <img className="cp-avatar" src={avatar} alt="avatar" />
-              ) : (
-                <div className="cp-avatar">{displayName.charAt(0).toUpperCase()}</div>
-              )}
-
-              <div className="cp-user-info">
-                <div className="cp-name">{displayName}</div>
-                <div className="cp-handle">{handle}</div>
-
-                {/* Language bar */}
-                <div className="cp-lang-bar">
-                  {nativeLang && (
-                    <div className="cp-lang-item">
-                      <span style={{ fontSize: 18 }}>{LANG_FLAG[nativeLang] || "🌐"}</span>
-                      <div>
-                        <div className="cp-lang-abbr">
-                          {nativeLang.slice(0, 2).toUpperCase()}
+                  {/* Language bar */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {nativeLang && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-lg">{LANG_FLAG[nativeLang] || "🌐"}</span>
+                        <div>
+                          <div className="text-white/85 text-xs font-extrabold tracking-wide">{nativeLang.slice(0,2).toUpperCase()}</div>
+                          <LangDots level="C2" color="bg-green-400" />
                         </div>
-                        <LangDots level="C2" color="#4ade80" />
                       </div>
-                    </div>
-                  )}
-
-                  {learningLangs.length > 0 && (
-                    <>
-                      <span className="cp-arrow">⇌</span>
-                      {learningLangs.map((l, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          {i > 0 && <div className="cp-lang-sep" />}
-                          <span style={{ fontSize: 18 }}>{LANG_FLAG[l.language] || "🌐"}</span>
-                          <div>
-                            <div className="cp-lang-abbr">
-                              {l.language.slice(0, 2).toUpperCase()}
+                    )}
+                    {learningLangs.length > 0 && (
+                      <>
+                        <span className="text-white/45 text-sm">⇌</span>
+                        {learningLangs.map((l, i) => (
+                          <div key={i} className="flex items-center gap-1.5">
+                            {i > 0 && <div className="w-px h-7 bg-white/20 mx-1" />}
+                            <span className="text-lg">{LANG_FLAG[l.language] || "🌐"}</span>
+                            <div>
+                              <div className="text-white/85 text-xs font-extrabold tracking-wide">{l.language.slice(0,2).toUpperCase()}</div>
+                              <LangDots level={l.level} color="bg-white/60" />
                             </div>
-                            <LangDots level={l.level} color="rgba(255,255,255,0.6)" />
                           </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
+                        ))}
+                      </>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Textarea */}
+              <textarea
+                placeholder="What's on your mind?"
+                value={text}
+                onChange={e => setText(e.target.value)}
+                maxLength={500}
+                className="w-full bg-white border-0 rounded-2xl p-4 text-[#1a2d6b] text-sm font-semibold
+                  resize-none min-h-[140px] outline-none mb-3.5 leading-relaxed placeholder:text-[#aab4cc]"
+              />
+
+              {/* Topics */}
+              <div className="flex flex-wrap gap-2 mb-3.5">
+                {visibleTopics.map(t => (
+                  <button key={t} onClick={() => toggleTopic(t)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-bold border cursor-pointer whitespace-nowrap transition-all
+                      ${selectedTopics.includes(t)
+                        ? "bg-[#4a7fe0] border-[#4a7fe0] text-white"
+                        : "bg-white/12 border-white/15 text-white/60 hover:bg-white/18"
+                      }`}>
+                    + {t}
+                  </button>
+                ))}
+                {!showAllTopics && (
+                  <button onClick={() => setShowAllTopics(true)}
+                    className="bg-white/8 border border-white/12 rounded-full px-3.5 py-1.5 text-white/40 text-xs font-bold cursor-pointer whitespace-nowrap">
+                    See more +
+                  </button>
+                )}
+              </div>
+
+              {/* Media buttons */}
+              <div className="flex gap-2.5 pt-3 border-t border-white/10">
+                {["📷","🖼","🎙"].map((icon, i) => (
+                  <button key={i}
+                    className="w-[38px] h-[38px] rounded-full bg-[#0f1c3f] border-0 text-white/70 text-base cursor-pointer
+                      flex items-center justify-center hover:bg-[#1a2d6b] transition-colors">
+                    {icon}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Textarea */}
-            <textarea
-              className="cp-textarea"
-              placeholder="What's on your mind?"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              maxLength={500}
-            />
-
-            {/* Topics */}
-            <div className="cp-topics">
-              {visibleTopics.map((t) => (
-                <button
-                  key={t}
-                  className={`cp-chip ${selectedTopics.includes(t) ? "selected" : ""}`}
-                  onClick={() => toggleTopic(t)}
-                >
-                  + {t}
-                </button>
-              ))}
-              {!showAllTopics && (
-                <button className="cp-see-more" onClick={() => setShowAllTopics(true)}>
-                  See more +
-                </button>
-              )}
-            </div>
-
-            {/* Media buttons */}
-            <div className="cp-media-row">
-              <button className="cp-media-btn" title="Camera">📷</button>
-              <button className="cp-media-btn" title="Gallery">🖼</button>
-              <button className="cp-media-btn" title="Audio">🎙</button>
-            </div>
+            {/* Error message */}
+            {message && (
+              <p className="text-center text-[#ff8fa3] text-[13px] font-bold mt-3 mx-4">{message}</p>
+            )}
 
           </div>
-
-          {message && <p className="cp-msg">{message}</p>}
-
+          </div>
         </div>
-      </div>
-    </>
+
+      <BottomNav />
+    </PhoneFrame>
   );
 }

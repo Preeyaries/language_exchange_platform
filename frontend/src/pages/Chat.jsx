@@ -1,34 +1,38 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/api";
+import PhoneFrame from "../components/PhoneFrame";
+
 
 function timeLabel(date) {
   if (!date) return "";
   return new Date(date).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
 }
 
+const WAVE_HEIGHTS = [12,18,10,22,14,20,10,16,12,18,8,14];
+
 export default function Chat() {
   const { id: otherUserId } = useParams();
   const navigate = useNavigate();
 
-  const [otherUser, setOtherUser]   = useState(null);
-  const [messages, setMessages]     = useState([]);
-  const [text, setText]             = useState("");
-  const [sending, setSending]       = useState(false);
-  const bottomRef                   = useRef(null);
-  const inputRef                    = useRef(null);
+  const [otherUser, setOtherUser] = useState(null);
+  const [messages, setMessages]   = useState([]);
+  const [text, setText]           = useState("");
+  const [sending, setSending]     = useState(false);
+  const bottomRef = useRef(null);
+  const inputRef  = useRef(null);
 
   const me = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
     fetchOtherUser();
     fetchMessages();
-    const interval = setInterval(fetchMessages, 5000); // poll every 5s
+    const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
   }, [otherUserId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior:"smooth" });
   }, [messages]);
 
   const fetchOtherUser = async () => {
@@ -48,360 +52,127 @@ export default function Chat() {
   const handleSend = async () => {
     if (!text.trim()) return;
     setSending(true);
-    const optimistic = {
-      _id: Date.now(),
-      sender: me.id,
-      text: text.trim(),
-      createdAt: new Date().toISOString(),
-      pending: true,
-    };
+    const optimistic = { _id: Date.now(), sender: me.id, text: text.trim(), createdAt: new Date().toISOString(), pending: true };
     setMessages(prev => [...prev, optimistic]);
+    const sent = text.trim();
     setText("");
-    try {
-      await API.post(`/messages/${otherUserId}`, { text: text.trim() });
-      fetchMessages();
-    } catch {}
-    finally { setSending(false); }
+    try { await API.post(`/messages/${otherUserId}`, { text: sent }); fetchMessages(); }
+    catch {} finally { setSending(false); }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  const displayName   = otherUser?.name || "User";
-  const avatar        = otherUser?.profilePicture || null;
-  const lastSeen      = "Last seen " + new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+  const displayName = otherUser?.name || "User";
+  const avatar      = otherUser?.profilePicture || null;
+  const lastSeen    = "Last seen " + new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <PhoneFrame>
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-        .chat-root {
-          min-height: 100vh;
-          background: #e8eef8;
-          font-family: 'Nunito', sans-serif;
-          display: flex;
-          justify-content: center;
-        }
+        <div className="w-full max-w-[390px] min-h-screen bg-[#e8eef8] flex flex-col">
 
-        .chat-phone {
-          width: 100%;
-          max-width: 390px;
-          min-height: 100vh;
-          background: #e8eef8;
-          display: flex;
-          flex-direction: column;
-        }
-
-        /* Header */
-        .chat-header {
-          background: #1a2d6b;
-          padding: 48px 16px 14px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          box-shadow: 0 2px 16px rgba(0,0,0,0.2);
-        }
-
-        .chat-back {
-          width: 36px; height: 36px;
-          border-radius: 50%;
-          background: #4a7fe0;
-          border: none;
-          color: white;
-          font-size: 18px;
-          cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-          transition: background 0.2s;
-        }
-
-        .chat-back:hover { background: #5a8ff0; }
-
-        .chat-header-avatar {
-          width: 42px; height: 42px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #4a7fe0, #2a4a8f);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 17px; font-weight: 800; color: white;
-          flex-shrink: 0; overflow: hidden;
-          border: 2px solid rgba(255,255,255,0.2);
-        }
-
-        .chat-header-avatar img { width:100%; height:100%; object-fit:cover; }
-
-        .chat-header-info { flex: 1; }
-
-        .chat-header-name {
-          color: #fff;
-          font-size: 15px;
-          font-weight: 800;
-        }
-
-        .chat-header-status {
-          color: rgba(255,255,255,0.5);
-          font-size: 12px;
-          font-weight: 600;
-          margin-top: 1px;
-        }
-
-        /* Messages area */
-        .chat-messages {
-          flex: 1;
-          padding: 16px 16px 8px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          overflow-y: auto;
-        }
-
-        /* Bubble */
-        .bubble-wrap {
-          display: flex;
-          flex-direction: column;
-          max-width: 72%;
-        }
-
-        .bubble-wrap.mine {
-          align-self: flex-end;
-          align-items: flex-end;
-        }
-
-        .bubble-wrap.theirs {
-          align-self: flex-start;
-          align-items: flex-start;
-        }
-
-        .bubble {
-          padding: 11px 15px;
-          border-radius: 18px;
-          font-size: 14px;
-          font-weight: 600;
-          line-height: 1.5;
-          word-break: break-word;
-        }
-
-        .bubble.mine {
-          background: #4a7fe0;
-          color: #fff;
-          border-bottom-right-radius: 4px;
-        }
-
-        .bubble.theirs {
-          background: #fff;
-          color: #1a2d6b;
-          border-bottom-left-radius: 4px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        /* Voice note bubble */
-        .bubble.voice {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 16px;
-          min-width: 140px;
-        }
-
-        .voice-play {
-          width: 28px; height: 28px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.25);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 12px; cursor: pointer; flex-shrink: 0;
-          border: none; color: white;
-        }
-
-        .voice-waves {
-          display: flex;
-          align-items: center;
-          gap: 2px;
-          flex: 1;
-        }
-
-        .voice-bar {
-          width: 3px;
-          border-radius: 2px;
-          background: rgba(255,255,255,0.6);
-          animation: wavePulse 1.2s ease-in-out infinite;
-        }
-
-        @keyframes wavePulse {
-          0%, 100% { transform: scaleY(1); }
-          50% { transform: scaleY(1.8); }
-        }
-
-        .bubble-time {
-          color: rgba(0,0,0,0.3);
-          font-size: 11px;
-          font-weight: 600;
-          margin-top: 3px;
-          padding: 0 4px;
-        }
-
-        .bubble-wrap.mine .bubble-time { color: rgba(255,255,255,0.5); }
-
-        /* Input bar */
-        .chat-input-bar {
-          background: #fff;
-          padding: 12px 16px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-          position: sticky;
-          bottom: 0;
-        }
-
-        .chat-input-btn {
-          width: 38px; height: 38px;
-          border-radius: 50%;
-          background: #e8eef8;
-          border: none;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 17px; cursor: pointer;
-          flex-shrink: 0;
-          transition: background 0.2s;
-          color: #1a2d6b;
-        }
-
-        .chat-input-btn:hover { background: #d0daf0; }
-
-        .chat-input {
-          flex: 1;
-          background: #f0f4fb;
-          border: none;
-          border-radius: 22px;
-          padding: 10px 16px;
-          font-family: 'Nunito', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          color: #1a2d6b;
-          outline: none;
-          resize: none;
-          max-height: 100px;
-          overflow-y: auto;
-        }
-
-        .chat-input::placeholder { color: #aab4cc; }
-
-        .chat-send {
-          width: 38px; height: 38px;
-          border-radius: 50%;
-          background: #4a7fe0;
-          border: none;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 17px; cursor: pointer;
-          flex-shrink: 0;
-          transition: background 0.2s, transform 0.15s;
-          color: white;
-        }
-
-        .chat-send:hover:not(:disabled) { background: #5a8ff0; transform: scale(1.05); }
-        .chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* Date separator */
-        .date-sep {
-          text-align: center;
-          color: rgba(0,0,0,0.3);
-          font-size: 12px;
-          font-weight: 700;
-          margin: 8px 0;
-        }
-      `}</style>
-
-      <div className="chat-root">
-        <div className="chat-phone">
-
-          {/* Header */}
-          <div className="chat-header">
-            <button className="chat-back" onClick={() => navigate("/messages")}>←</button>
-
-            <div className="chat-header-avatar">
-              {avatar
-                ? <img src={avatar} alt="" />
-                : displayName.charAt(0).toUpperCase()
-              }
-            </div>
-
-            <div className="chat-header-info">
-              <div className="chat-header-name">{displayName}</div>
-              <div className="chat-header-status">{lastSeen}</div>
-            </div>
-
-            <button
-              onClick={() => navigate(`/profile/${otherUserId}`)}
-              style={{ background:"none", border:"none", color:"rgba(255,255,255,0.5)", fontSize:22, cursor:"pointer", padding:"4px 8px" }}
-            >
-              ⋮
+          {/* ── Header ── */}
+          <div className="bg-[#1a2d6b] pt-12 pb-3.5 px-4 flex items-center gap-3 sticky top-0 z-50 shadow-[0_2px_16px_rgba(0,0,0,0.2)]">
+            <button onClick={() => navigate("/messages")}
+              className="w-9 h-9 rounded-full bg-[#4a7fe0] border-0 text-white text-lg cursor-pointer flex items-center justify-center shrink-0 hover:bg-[#5a8ff0] transition-colors">
+              ←
             </button>
+
+            <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-[17px] font-extrabold text-white shrink-0 border-2 border-white/20 overflow-hidden">
+              {avatar ? <img src={avatar} alt="" className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="text-white text-[15px] font-extrabold truncate">{displayName}</div>
+              <div className="text-white/50 text-xs font-semibold mt-0.5">{lastSeen}</div>
+            </div>
+
+            <button onClick={() => navigate(`/profile/${otherUserId}`)}
+              className="bg-transparent border-0 text-white/50 text-2xl cursor-pointer px-2 py-1 leading-none hover:text-white transition-colors">⋮</button>
           </div>
 
-          {/* Messages */}
-          <div className="chat-messages">
+          {/* ── Messages ── */}
+          <div className="flex-1 px-4 pt-4 pb-2 flex flex-col gap-2 overflow-y-auto">
             {messages.length === 0 && (
-              <div style={{ textAlign:"center", color:"rgba(0,0,0,0.3)", fontSize:13, fontWeight:600, marginTop:40 }}>
-                <p style={{ fontSize:32, marginBottom:8 }}>👋</p>
+              <div className="text-center text-black/30 text-[13px] font-semibold mt-10">
+                <p className="text-4xl mb-2">👋</p>
                 <p>Say hello to {displayName}!</p>
               </div>
             )}
 
             {messages.map((msg, i) => {
-              const isMine = String(msg.sender) === String(me.id) || String(msg.sender?._id) === String(me.id);
+              const isMine  = String(msg.sender) === String(me.id) || String(msg.sender?._id) === String(me.id);
               const isVoice = msg.voiceNoteUrl;
 
               return (
-                <div key={msg._id || i} className={`bubble-wrap ${isMine ? "mine" : "theirs"}`}>
+                <div key={msg._id || i} className={`flex flex-col max-w-[72%] ${isMine ? "self-end items-end" : "self-start items-start"}`}>
                   {isVoice ? (
-                    <div className={`bubble voice ${isMine ? "mine" : "theirs"}`}>
-                      <button className="voice-play">▶</button>
-                      <div className="voice-waves">
-                        {[12,18,10,22,14,20,10,16,12,18,8,14].map((h,j) => (
-                          <div key={j} className="voice-bar" style={{
-                            height: h, animationDelay: `${j*0.08}s`
-                          }}/>
+                    /* Voice note bubble */
+                    <div className={`flex items-center gap-2.5 px-4 py-3 rounded-[18px] min-w-[140px]
+                      ${isMine ? "bg-[#4a7fe0] text-white rounded-br-[4px]" : "bg-white text-[#1a2d6b] rounded-bl-[4px] shadow-[0_2px_8px_rgba(0,0,0,0.08)]"}`}>
+                      <button className="w-7 h-7 rounded-full bg-white/25 border-0 flex items-center justify-center text-xs cursor-pointer shrink-0 text-white">▶</button>
+                      <div className="flex items-center gap-0.5 flex-1">
+                        {WAVE_HEIGHTS.map((h, j) => (
+                          <div key={j} className="w-[3px] rounded-sm bg-white/60"
+                            style={{ height:h, animation:`wavePulse 1.2s ease-in-out ${j*0.08}s infinite` }} />
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <div className={`bubble ${isMine ? "mine" : "theirs"}`} style={{ opacity: msg.pending ? 0.7 : 1 }}>
+                    /* Text bubble */
+                    <div className={`px-[15px] py-[11px] rounded-[18px] text-sm font-semibold leading-[1.5] break-words
+                      ${isMine
+                        ? "bg-[#4a7fe0] text-white rounded-br-[4px]"
+                        : "bg-white text-[#1a2d6b] rounded-bl-[4px] shadow-[0_2px_8px_rgba(0,0,0,0.08)]"}
+                      ${msg.pending ? "opacity-70" : ""}`}>
                       {msg.text}
                     </div>
                   )}
-                  <span className="bubble-time">{timeLabel(msg.createdAt)}</span>
+                  <span className={`text-[11px] font-semibold mt-1 px-1 ${isMine ? "text-white/50" : "text-black/30"}`}>
+                    {timeLabel(msg.createdAt)}
+                  </span>
                 </div>
               );
             })}
             <div ref={bottomRef} />
           </div>
 
-          {/* Input bar */}
-          <div className="chat-input-bar">
-            <button className="chat-input-btn" title="Camera">📷</button>
-            <button className="chat-input-btn" title="Gallery">🖼</button>
-            <button className="chat-input-btn" title="Voice">🎙</button>
+          {/* ── Input bar ── */}
+          <div className="bg-white px-4 py-3 flex items-center gap-2.5 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] sticky bottom-0">
+            {["📷","🖼","🎙"].map((icon, i) => (
+              <button key={i}
+                className="w-[38px] h-[38px] rounded-full bg-[#e8eef8] border-0 flex items-center justify-center text-[17px] cursor-pointer shrink-0 text-[#1a2d6b] hover:bg-[#d0daf0] transition-colors">
+                {icon}
+              </button>
+            ))}
             <input
               ref={inputRef}
-              className="chat-input"
               placeholder="Message"
               value={text}
               onChange={e => setText(e.target.value)}
               onKeyDown={handleKeyDown}
+              className="flex-1 bg-[#f0f4fb] border-0 rounded-full py-2.5 px-4 text-[#1a2d6b] text-sm font-semibold outline-none placeholder:text-[#aab4cc]"
             />
-            <button className="chat-send" onClick={handleSend} disabled={sending || !text.trim()}>
+            <button onClick={handleSend} disabled={sending || !text.trim()}
+              className="w-[38px] h-[38px] rounded-full bg-[#4a7fe0] border-0 flex items-center justify-center text-[17px] cursor-pointer shrink-0 text-white
+                hover:bg-[#5a8ff0] hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
               ➤
             </button>
           </div>
+
         </div>
+
+        {/* Keyframe for voice wave */}
+        <style>{`
+          @keyframes wavePulse {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.8); }
+          }
+        `}</style>
       </div>
-    </>
+    </PhoneFrame>
   );
 }

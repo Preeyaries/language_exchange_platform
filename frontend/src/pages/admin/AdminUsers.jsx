@@ -1,4 +1,3 @@
-// src/pages/admin/AdminUsers.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout";
@@ -15,16 +14,29 @@ function timeAgo(date) {
   return `${Math.floor(diff/86400)} days ago`;
 }
 
+const Badge = ({ active, label }) => (
+  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold
+    ${active ? "bg-green-400/15 text-green-400" : "bg-red-400/15 text-red-400"}`}>
+    {label}
+  </span>
+);
+
+const RoleBadge = ({ role }) => (
+  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold
+    ${role === "admin" ? "bg-[#4a7fe0]/20 text-[#7ab3f5]" : "bg-white/8 text-white/50"}`}>
+    {role === "admin" ? "Admin" : "User"}
+  </span>
+);
+
 export default function AdminUsers() {
   const navigate = useNavigate();
-  const [users, setUsers]       = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [search, setSearch]     = useState("");
+  const [users, setUsers]         = useState([]);
+  const [filtered, setFiltered]   = useState([]);
+  const [search, setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [roleFilter, setRoleFilter]     = useState("All");
-  const [page, setPage]         = useState(1);
-  const [loading, setLoading]   = useState(true);
-  const [actionMenu, setActionMenu] = useState(null);
+  const [page, setPage]           = useState(1);
+  const [loading, setLoading]     = useState(true);
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -32,332 +44,173 @@ export default function AdminUsers() {
     let result = [...users];
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter(u =>
-        u.name?.toLowerCase().includes(q) ||
-        u.email?.toLowerCase().includes(q)
-      );
+      result = result.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
     }
-    if (statusFilter !== "All") {
-      if (statusFilter === "Active")    result = result.filter(u => !u.isSuspended);
-      if (statusFilter === "Suspended") result = result.filter(u => u.isSuspended);
-    }
-    if (roleFilter !== "All") {
-      result = result.filter(u => u.role === roleFilter.toLowerCase());
-    }
+    if (statusFilter === "Active")    result = result.filter(u => !u.isSuspended);
+    if (statusFilter === "Suspended") result = result.filter(u => u.isSuspended);
+    if (roleFilter !== "All")         result = result.filter(u => u.role === roleFilter.toLowerCase());
     setFiltered(result);
     setPage(1);
   }, [search, statusFilter, roleFilter, users]);
 
   const fetchUsers = async () => {
     setLoading(true);
-    try {
-      const res = await API.get("/admin/users");
-      setUsers(res.data || []);
-    } catch { setUsers([]); }
+    try { const res = await API.get("/admin/users"); setUsers(res.data || []); }
+    catch { setUsers([]); }
     finally { setLoading(false); }
   };
 
   const handleSuspend = async (userId, suspend) => {
     try {
-      const endpoint = suspend
-        ? `/admin/users/${userId}/suspend`
-        : `/admin/users/${userId}/unsuspend`;
-      await API.put(endpoint);
+      await API.put(`/admin/users/${userId}/${suspend ? "suspend" : "unsuspend"}`);
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, isSuspended: suspend } : u));
     } catch (err) { alert(err.response?.data?.message || "Action failed"); }
-    setActionMenu(null);
   };
 
   const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
-  const paginated  = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+  const paginated  = filtered.slice((page-1)*ROWS_PER_PAGE, page*ROWS_PER_PAGE);
+
+  const SelectFilter = ({ value, onChange, options }) => (
+    <select value={value} onChange={e => onChange(e.target.value)}
+      className="bg-white/10 border border-white/15 rounded-full py-2 px-4 text-white text-sm font-bold outline-none cursor-pointer appearance-none"
+      style={{ colorScheme:"dark" }}>
+      {options.map(o => <option key={o} value={o} style={{ background:"#1a2d6b" }}>{o}</option>)}
+    </select>
+  );
+
+  const PageBtn = ({ onClick, disabled, active, children }) => (
+    <button onClick={onClick} disabled={disabled}
+      className={`w-8 h-8 rounded-lg border-0 text-sm font-bold cursor-pointer flex items-center justify-center transition-all
+        ${active ? "bg-[#4a7fe0] text-white" : "bg-white text-[#1a2d6b] hover:bg-[#e0e8f8]"}
+        disabled:opacity-40 disabled:cursor-not-allowed`}>
+      {children}
+    </button>
+  );
 
   return (
     <AdminLayout>
-      <style>{`
-        .au-page-header { margin-bottom: 24px; }
-        .au-page-title { color: #1a2d6b; font-size: 22px; font-weight: 900; margin-bottom: 4px; }
-        .au-page-sub   { color: #6b7fa3; font-size: 13px; font-weight: 600; }
-
-        .au-filter-bar {
-          background: #1a2d6b;
-          border-radius: 16px;
-          padding: 16px 20px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-        }
-
-        .au-search-wrap { position: relative; flex: 1; min-width: 200px; }
-        .au-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.4); font-size: 14px; }
-        .au-search {
-          width: 100%;
-          background: rgba(255,255,255,0.1);
-          border: 1.5px solid rgba(255,255,255,0.15);
-          border-radius: 22px;
-          padding: 9px 16px 9px 36px;
-          color: #fff;
-          font-family: 'Nunito', sans-serif;
-          font-size: 13px;
-          font-weight: 600;
-          outline: none;
-        }
-        .au-search::placeholder { color: rgba(255,255,255,0.35); }
-
-        .au-select {
-          background: rgba(255,255,255,0.1);
-          border: 1.5px solid rgba(255,255,255,0.15);
-          border-radius: 22px;
-          padding: 9px 16px;
-          color: #fff;
-          font-family: 'Nunito', sans-serif;
-          font-size: 13px;
-          font-weight: 700;
-          outline: none;
-          cursor: pointer;
-        }
-        .au-select option { background: #1a2d6b; }
-
-        .au-add-btn {
-          background: #4a7fe0;
-          border: none;
-          border-radius: 22px;
-          padding: 9px 18px;
-          color: #fff;
-          font-family: 'Nunito', sans-serif;
-          font-size: 13px;
-          font-weight: 800;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: background 0.2s;
-          margin-left: auto;
-        }
-        .au-add-btn:hover { background: #5a8ff0; }
-
-        .au-table-wrap {
-          background: #1a2d6b;
-          border-radius: 16px;
-          overflow: hidden;
-          margin-bottom: 16px;
-        }
-
-        .au-table { width: 100%; border-collapse: collapse; }
-
-        .au-table th {
-          background: rgba(255,255,255,0.05);
-          color: rgba(255,255,255,0.5);
-          font-size: 12px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          padding: 12px 16px;
-          text-align: left;
-          white-space: nowrap;
-        }
-
-        .au-table td {
-          padding: 12px 16px;
-          color: rgba(255,255,255,0.85);
-          font-size: 13px;
-          font-weight: 600;
-          border-top: 1px solid rgba(255,255,255,0.05);
-          vertical-align: middle;
-        }
-
-        .au-table tr:hover td { background: rgba(255,255,255,0.03); }
-
-        .au-user-cell { display: flex; align-items: center; gap: 10px; }
-
-        .au-user-avatar {
-          width: 34px; height: 34px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #4a7fe0, #2a4a8f);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 13px; font-weight: 800; color: white;
-          flex-shrink: 0;
-        }
-
-        .au-user-name { color: #fff; font-weight: 800; font-size: 13px; }
-        .au-user-email { color: rgba(255,255,255,0.4); font-size: 11px; }
-
-        .badge {
-          display: inline-flex; align-items: center;
-          padding: 4px 10px; border-radius: 20px;
-          font-size: 11px; font-weight: 800;
-        }
-        .badge-active    { background: rgba(74,222,128,0.15); color: #4ade80; }
-        .badge-suspended { background: rgba(248,113,113,0.15); color: #f87171; }
-        .badge-admin     { background: rgba(74,127,224,0.2);  color: #7ab3f5; }
-        .badge-user      { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
-
-        .au-action-wrap { position: relative; }
-        .au-action-btn {
-          background: none; border: none; cursor: pointer;
-          color: rgba(255,255,255,0.4); font-size: 18px; padding: 4px 8px;
-          transition: color 0.2s;
-        }
-        .au-action-btn:hover { color: #fff; }
-
-        .au-action-icon-btn {
-          background: none; border: none; cursor: pointer;
-          color: rgba(255,255,255,0.4); font-size: 15px; padding: 4px;
-          transition: color 0.2s;
-        }
-        .au-action-icon-btn:hover { color: #fff; }
-        .au-action-icon-btn.danger:hover { color: #f87171; }
-
-        .au-dropdown {
-          position: absolute; right: 0; top: 28px; z-index: 50;
-          background: #243580; border-radius: 12px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-          border: 1px solid rgba(255,255,255,0.1);
-          overflow: hidden; min-width: 150px;
-        }
-
-        .au-dropdown-item {
-          display: flex; align-items: center; gap: 10px;
-          padding: 11px 16px; width: 100%; background: none; border: none;
-          color: rgba(255,255,255,0.75); font-family: 'Nunito', sans-serif;
-          font-size: 13px; font-weight: 700; cursor: pointer;
-          transition: background 0.15s;
-          text-align: left;
-        }
-        .au-dropdown-item:hover { background: rgba(255,255,255,0.07); }
-        .au-dropdown-item.danger { color: #f87171; }
-        .au-dropdown-item.danger:hover { background: rgba(255,100,100,0.1); }
-
-        .au-pagination {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 0 4px;
-        }
-
-        .au-rows-info { color: #6b7fa3; font-size: 13px; font-weight: 600; }
-
-        .au-page-btns { display: flex; gap: 4px; }
-
-        .au-page-btn {
-          width: 32px; height: 32px; border-radius: 8px;
-          background: #fff; border: none;
-          color: #1a2d6b; font-family: 'Nunito', sans-serif;
-          font-size: 13px; font-weight: 700; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          transition: background 0.15s;
-        }
-        .au-page-btn:hover:not(:disabled) { background: #e0e8f8; }
-        .au-page-btn.active { background: #4a7fe0; color: #fff; }
-        .au-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-      `}</style>
-
-      {/* Page header */}
-      <div className="au-page-header">
-        <h1 className="au-page-title">User Management</h1>
-        <p className="au-page-sub">Manage all users in one place. Control access, assign roles, and monitor activity across your platform.</p>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-[#1a2d6b] text-2xl font-black mb-1">User Management</h1>
+        <p className="text-[#6b7fa3] text-sm font-semibold">Manage all users in one place. Control access, assign roles, and monitor activity.</p>
       </div>
 
       {/* Filter bar */}
-      <div className="au-filter-bar">
-        <div className="au-search-wrap">
-          <span className="au-search-icon">🔍</span>
-          <input className="au-search" placeholder="Search" value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="bg-[#1a2d6b] rounded-2xl px-5 py-4 flex flex-wrap items-center gap-3 mb-5">
+        <div className="relative flex-1 min-w-[200px]">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm pointer-events-none">🔍</span>
+          <input placeholder="Search" value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full bg-white/10 border border-white/15 rounded-full py-2 pl-9 pr-4
+              text-white text-sm font-semibold outline-none placeholder:text-white/35 focus:border-white/30 transition-all" />
         </div>
-        <select className="au-select" value={roleFilter} onChange={e => setRoleFilter(e.target.value)}>
-          <option>All</option>
-          <option>User</option>
-          <option>Admin</option>
-        </select>
-        <select className="au-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-          <option>All</option>
-          <option>Active</option>
-          <option>Suspended</option>
-        </select>
-        <button className="au-add-btn" onClick={() => navigate("/admin/users/new")}>+ Add User</button>
+        <SelectFilter value={roleFilter} onChange={setRoleFilter} options={["All","User","Admin"]} />
+        <SelectFilter value={statusFilter} onChange={setStatusFilter} options={["All","Active","Suspended"]} />
+        <button onClick={() => navigate("/admin/users/new")}
+          className="bg-[#4a7fe0] border-0 rounded-full py-2 px-5 text-white text-sm font-extrabold cursor-pointer ml-auto whitespace-nowrap hover:bg-[#5a8ff0] transition-colors">
+          + Add User
+        </button>
       </div>
 
       {/* Table */}
-      <div className="au-table-wrap">
-        <table className="au-table">
-          <thead>
-            <tr>
-              <th style={{ width: 40 }}><input type="checkbox" /></th>
-              <th>User Id</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Role</th>
-              <th>Joined Date</th>
-              <th>Last Active</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={9} style={{ textAlign:"center", padding:40, color:"rgba(255,255,255,0.3)" }}>Loading...</td></tr>
-            ) : paginated.length === 0 ? (
-              <tr><td colSpan={9} style={{ textAlign:"center", padding:40, color:"rgba(255,255,255,0.3)" }}>No users found</td></tr>
-            ) : paginated.map((user, i) => (
-              <tr key={user._id}>
-                <td><input type="checkbox" /></td>
-                <td style={{ color:"rgba(255,255,255,0.4)", fontFamily:"monospace" }}>
-                  {String((page-1)*ROWS_PER_PAGE + i + 1).padStart(4,"0")}
-                </td>
-                <td>
-                  <div className="au-user-cell">
-                    <div className="au-user-avatar">{user.name?.charAt(0).toUpperCase()}</div>
-                    <div>
-                      <div className="au-user-name">{user.name}</div>
+      <div className="bg-[#1a2d6b] rounded-2xl overflow-hidden mb-4">
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-white/5">
+                <th className="w-10 px-4 py-3 text-left"><input type="checkbox" className="accent-[#4a7fe0]" /></th>
+                {["User Id","Full Name","Email","Status","Role","Joined Date","Last Active","Actions"].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-white/50 text-[11px] font-extrabold uppercase tracking-wider whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={9} className="text-center py-10 text-white/30 text-sm">Loading...</td></tr>
+              ) : paginated.length === 0 ? (
+                <tr><td colSpan={9} className="text-center py-10 text-white/30 text-sm">No users found</td></tr>
+              ) : paginated.map((user, i) => (
+                <tr key={user._id} className="border-t border-white/5 hover:bg-white/[0.03] transition-colors">
+                  <td className="px-4 py-3"><input type="checkbox" className="accent-[#4a7fe0]" /></td>
+                  <td className="px-4 py-3 text-white/40 font-mono text-[13px]">{String((page-1)*ROWS_PER_PAGE+i+1).padStart(4,"0")}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-[13px] font-extrabold text-white shrink-0">
+                        {user.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-white font-extrabold text-[13px]">{user.name}</span>
                     </div>
-                  </div>
-                </td>
-                <td style={{ color:"rgba(255,255,255,0.6)" }}>{user.email}</td>
-                <td>
-                  <span className={`badge ${user.isSuspended ? "badge-suspended" : "badge-active"}`}>
-                    {user.isSuspended ? "Suspended" : "Active"}
-                  </span>
-                </td>
-                <td>
-                  <span className={`badge ${user.role === "admin" ? "badge-admin" : "badge-user"}`}>
-                    {user.role === "admin" ? "Admin" : "User"}
-                  </span>
-                </td>
-                <td style={{ color:"rgba(255,255,255,0.5)" }}>
-                  {new Date(user.createdAt).toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" })}
-                </td>
-                <td style={{ color:"rgba(255,255,255,0.5)" }}>{timeAgo(user.updatedAt)}</td>
-                <td>
-                  <div className="au-action-wrap">
-                    <div style={{ display:"flex", gap:4, alignItems:"center" }}>
-                      <button className="au-action-icon-btn" title="Edit" onClick={() => navigate(`/admin/users/edit/${user._id}`)}>✏️</button>
-                      <button
-                        className="au-action-icon-btn danger"
-                        title={user.isSuspended ? "Unsuspend" : "Suspend"}
-                        onClick={() => handleSuspend(user._id, !user.isSuspended)}
-                      >
+                  </td>
+                  <td className="px-4 py-3 text-white/60 text-[13px]">{user.email}</td>
+                  <td className="px-4 py-3"><Badge active={!user.isSuspended} label={user.isSuspended?"Suspended":"Active"} /></td>
+                  <td className="px-4 py-3"><RoleBadge role={user.role} /></td>
+                  <td className="px-4 py-3 text-white/50 text-[13px] whitespace-nowrap">
+                    {new Date(user.createdAt).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}
+                  </td>
+                  <td className="px-4 py-3 text-white/50 text-[13px] whitespace-nowrap">{timeAgo(user.updatedAt)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => navigate(`/admin/users/edit/${user._id}`)} title="Edit"
+                        className="bg-transparent border-0 text-base cursor-pointer p-1 text-white/40 hover:text-white transition-colors">✏️</button>
+                      <button onClick={() => handleSuspend(user._id, !user.isSuspended)}
+                        title={user.isSuspended?"Unsuspend":"Suspend"}
+                        className="bg-transparent border-0 text-base cursor-pointer p-1 text-white/40 hover:text-red-400 transition-colors">
                         {user.isSuspended ? "✅" : "🚫"}
                       </button>
                     </div>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile card list */}
+        <div className="md:hidden divide-y divide-white/5">
+          {loading ? (
+            <div className="text-center py-10 text-white/30 text-sm">Loading...</div>
+          ) : paginated.length === 0 ? (
+            <div className="text-center py-10 text-white/30 text-sm">No users found</div>
+          ) : paginated.map(user => (
+            <div key={user._id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-sm font-extrabold text-white shrink-0">
+                {user.name?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-white font-extrabold text-sm truncate">{user.name}</div>
+                <div className="text-white/45 text-xs truncate">{user.email}</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge active={!user.isSuspended} label={user.isSuspended?"Suspended":"Active"} />
+                  <RoleBadge role={user.role} />
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => navigate(`/admin/users/edit/${user._id}`)}
+                  className="bg-transparent border-0 text-base cursor-pointer p-1 text-white/40 hover:text-white transition-colors">✏️</button>
+                <button onClick={() => handleSuspend(user._id, !user.isSuspended)}
+                  className="bg-transparent border-0 text-base cursor-pointer p-1 text-white/40 hover:text-red-400 transition-colors">
+                  {user.isSuspended ? "✅" : "🚫"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Pagination */}
-      <div className="au-pagination">
-        <span className="au-rows-info">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[#6b7fa3] text-sm font-semibold">
           Rows per page: <strong>10</strong> &nbsp;·&nbsp; {filtered.length} total
         </span>
-        <div className="au-page-btns">
-          <button className="au-page-btn" onClick={() => setPage(1)} disabled={page === 1}>«</button>
-          <button className="au-page-btn" onClick={() => setPage(p => p-1)} disabled={page === 1}>‹</button>
-          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
-            <button key={p} className={`au-page-btn ${page === p ? "active" : ""}`} onClick={() => setPage(p)}>{p}</button>
+        <div className="flex gap-1">
+          <PageBtn onClick={() => setPage(1)} disabled={page===1}>«</PageBtn>
+          <PageBtn onClick={() => setPage(p=>p-1)} disabled={page===1}>‹</PageBtn>
+          {Array.from({ length: Math.min(totalPages,5) }, (_,i) => i+1).map(p => (
+            <PageBtn key={p} onClick={() => setPage(p)} active={page===p}>{p}</PageBtn>
           ))}
-          {totalPages > 5 && <button className="au-page-btn" disabled>…</button>}
-          <button className="au-page-btn" onClick={() => setPage(p => p+1)} disabled={page === totalPages}>›</button>
-          <button className="au-page-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>»</button>
+          {totalPages > 5 && <PageBtn disabled>…</PageBtn>}
+          <PageBtn onClick={() => setPage(p=>p+1)} disabled={page===totalPages}>›</PageBtn>
+          <PageBtn onClick={() => setPage(totalPages)} disabled={page===totalPages}>»</PageBtn>
         </div>
       </div>
     </AdminLayout>

@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api/api";
+import BottomNav from "../components/BottomNav";
+import PhoneFrame from "../components/PhoneFrame";
 
 const LANG_FLAG = {
   English: "🇬🇧", Thai: "🇹🇭", Japanese: "🇯🇵", Korean: "🇰🇷",
@@ -11,43 +13,62 @@ const LANG_FLAG = {
   Dutch: "🇳🇱", Swedish: "🇸🇪", Polish: "🇵🇱",
 };
 
-const LANGUAGES = ["All", "English", "Thai", "Japanese", "Korean",
-  "Chinese (Mandarin)", "French", "German", "Spanish", "Vietnamese"];
+const LANGUAGES = [
+  "All", "English", "Thai", "Japanese", "Korean",
+  "Chinese (Mandarin)", "French", "German", "Spanish", "Vietnamese"
+];
 
-const LEVEL_FILLED = { A1:1, A2:2, B1:3, B2:4, C1:5, C2:5 };
+const LEVEL_FILLED = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 5 };
 
 function timeAgo(date) {
   const diff = Math.floor((Date.now() - new Date(date)) / 1000);
-  if (diff < 60)   return `${diff}s`;
-  if (diff < 3600) return `${Math.floor(diff/60)} mins`;
-  if (diff < 86400) return `${Math.floor(diff/3600)} hrs`;
-  return `${Math.floor(diff/86400)} days`;
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} mins`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hrs`;
+  return `${Math.floor(diff / 86400)} days`;
+}
+
+function LangDots({ filled, color = "bg-white/75" }) {
+  return (
+    <div className="mt-0.5 flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className={`h-1.5 w-1.5 rounded-full ${i <= filled ? color : "bg-white/20"}`}
+        />
+      ))}
+    </div>
+  );
 }
 
 function LangBar({ nativeLang, learningLangs = [] }) {
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+    <div className="mt-1 flex items-center gap-2">
       {nativeLang && (
-        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
-          <span style={{ fontSize:16 }}>{LANG_FLAG[nativeLang] || "🌐"}</span>
-          <span style={{ color:"rgba(255,255,255,0.8)", fontSize:10, fontWeight:800 }}>{nativeLang.slice(0,2).toUpperCase()}</span>
-          <div style={{ display:"flex", gap:2 }}>
-            {[1,2,3,4,5].map(i=><div key={i} style={{ width:5,height:5,borderRadius:"50%",background:"#4ade80" }}/>)}
-          </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-base leading-none">{LANG_FLAG[nativeLang] || "🌐"}</span>
+          <span className="text-[10px] font-extrabold text-white/80">
+            {nativeLang.slice(0, 2).toUpperCase()}
+          </span>
+          <LangDots filled={5} color="bg-green-400" />
         </div>
       )}
-      {learningLangs.length > 0 && <span style={{ color:"rgba(255,255,255,0.35)", fontSize:12 }}>⇌</span>}
-      {learningLangs.map((l,i) => {
+
+      {learningLangs.length > 0 && (
+        <span className="text-xs text-white/35">⇌</span>
+      )}
+
+      {learningLangs.map((l, i) => {
         const filled = LEVEL_FILLED[l.level] || 1;
         return (
-          <span key={i} style={{ display:"flex", alignItems:"center", gap:6 }}>
-            {i > 0 && <span style={{ width:1, height:24, background:"rgba(255,255,255,0.15)", display:"inline-block" }}/>}
-            <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
-              <span style={{ fontSize:16 }}>{LANG_FLAG[l.language] || "🌐"}</span>
-              <span style={{ color:"rgba(255,255,255,0.8)", fontSize:10, fontWeight:800 }}>{l.language.slice(0,2).toUpperCase()}</span>
-              <div style={{ display:"flex", gap:2 }}>
-                {[1,2,3,4,5].map(d=><div key={d} style={{ width:5,height:5,borderRadius:"50%",background: d<=filled?"rgba(255,255,255,0.75)":"rgba(255,255,255,0.18)" }}/>)}
-              </div>
+          <span key={i} className="flex items-center gap-1.5">
+            {i > 0 && <span className="inline-block h-6 w-px bg-white/15" />}
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="text-base leading-none">{LANG_FLAG[l.language] || "🌐"}</span>
+              <span className="text-[10px] font-extrabold text-white/80">
+                {l.language.slice(0, 2).toUpperCase()}
+              </span>
+              <LangDots filled={filled} />
             </div>
           </span>
         );
@@ -58,36 +79,41 @@ function LangBar({ nativeLang, learningLangs = [] }) {
 
 export default function Feed() {
   const navigate = useNavigate();
-  const [posts, setPosts]           = useState([]);
-  const [filtered, setFiltered]     = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState("");
+  const [posts, setPosts] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [activeLang, setActiveLang] = useState("All");
-  const [activeTab, setActiveTab]   = useState("all"); // "all" | "following"
+  const [activeTab, setActiveTab] = useState("all");
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [followingIds, setFollowingIds] = useState(new Set());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const searchRef = useRef(null);
-
   const me = JSON.parse(localStorage.getItem("user") || "{}");
 
-  useEffect(() => { fetchPosts(); fetchFollowing(); }, []);
+  useEffect(() => {
+    fetchPosts();
+    fetchFollowing();
+  }, []);
 
-  useEffect(() => { applyFilters(); }, [posts, search, activeLang, activeTab, followingIds]);
+  useEffect(() => {
+    applyFilters();
+  }, [posts, search, activeLang, activeTab, followingIds]);
 
   const fetchPosts = async () => {
     setLoading(true);
     try {
       const res = await API.get("/posts");
       setPosts(res.data || []);
-    } catch { setPosts([]); }
-    finally { setLoading(false); }
+    } catch {
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchFollowing = async () => {
     try {
-      const res = await API.get("/profile");
-      // get following list from user model
       const meRes = await API.get("/auth/me");
       setFollowingIds(new Set((meRes.data.following || []).map(String)));
     } catch {}
@@ -96,24 +122,22 @@ export default function Feed() {
   const applyFilters = () => {
     let result = [...posts];
 
-    // Tab filter
     if (activeTab === "following") {
-      result = result.filter(p => followingIds.has(String(p.author?._id)));
+      result = result.filter((p) => followingIds.has(String(p.author?._id)));
     }
 
-    // Language filter
     if (activeLang !== "All") {
-      result = result.filter(p =>
-        p.nativeLanguage === activeLang || p.learningLanguage === activeLang
+      result = result.filter(
+        (p) => p.nativeLanguage === activeLang || p.learningLanguage === activeLang
       );
     }
 
-    // Search
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter(p =>
-        p.text?.toLowerCase().includes(q) ||
-        p.author?.name?.toLowerCase().includes(q)
+      result = result.filter(
+        (p) =>
+          p.text?.toLowerCase().includes(q) ||
+          p.author?.name?.toLowerCase().includes(q)
       );
     }
 
@@ -121,7 +145,7 @@ export default function Feed() {
   };
 
   const toggleLike = (postId) => {
-    setLikedPosts(prev => {
+    setLikedPosts((prev) => {
       const next = new Set(prev);
       next.has(postId) ? next.delete(postId) : next.add(postId);
       return next;
@@ -129,738 +153,339 @@ export default function Feed() {
   };
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        .feed-root {
-          min-height: 100vh;
-          background: #0f1c3f;
-          font-family: 'Nunito', sans-serif;
-          display: flex;
-          justify-content: center;
-        }
-
-        .feed-phone {
-          width: 100%;
-          max-width: 390px;
-          min-height: 100vh;
-          background: #0f1c3f;
-          padding-bottom: 90px;
-        }
-
-        /* Top bar */
-        .feed-topbar {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          background: #0f1c3f;
-          padding: 14px 16px 10px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .feed-logo {
-          width: 40px;
-          height: 40px;
-          border-radius: 12px;
-          background: #1a2d6b;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          font-size: 18px;
-        }
-
-        .feed-search-wrap {
-          flex: 1;
-          position: relative;
-        }
-
-        .feed-search {
-          width: 100%;
-          background: rgba(255,255,255,0.08);
-          border: 1.5px solid rgba(255,255,255,0.1);
-          border-radius: 22px;
-          padding: 10px 16px 10px 38px;
-          color: #fff;
-          font-family: 'Nunito', sans-serif;
-          font-size: 13px;
-          font-weight: 600;
-          outline: none;
-          transition: border-color 0.2s, background 0.2s;
-        }
-
-        .feed-search::placeholder { color: rgba(255,255,255,0.3); }
-        .feed-search:focus {
-          border-color: rgba(255,255,255,0.25);
-          background: rgba(255,255,255,0.12);
-        }
-
-        .search-icon {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: rgba(255,255,255,0.35);
-          font-size: 14px;
-          pointer-events: none;
-        }
-
-        /* Tabs */
-        .feed-tabs {
-          display: flex;
-          gap: 0;
-          padding: 12px 16px 0;
-          border-bottom: 1px solid rgba(255,255,255,0.07);
-        }
-
-        .feed-tab {
-          flex: 1;
-          background: none;
-          border: none;
-          color: rgba(255,255,255,0.4);
-          font-family: 'Nunito', sans-serif;
-          font-size: 13px;
-          font-weight: 800;
-          padding: 8px 0 12px;
-          cursor: pointer;
-          position: relative;
-          transition: color 0.2s;
-        }
-
-        .feed-tab.active { color: #fff; }
-
-        .feed-tab.active::after {
-          content: '';
-          position: absolute;
-          bottom: -1px;
-          left: 20%;
-          width: 60%;
-          height: 2.5px;
-          border-radius: 2px;
-          background: #4a7fe0;
-        }
-
-        /* Language filter chips */
-        .lang-filter-wrap {
-          padding: 12px 16px;
-          overflow-x: auto;
-          scrollbar-width: none;
-          display: flex;
-          gap: 8px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .lang-filter-wrap::-webkit-scrollbar { display: none; }
-
-        .lang-chip {
-          background: rgba(255,255,255,0.08);
-          border: 1.5px solid rgba(255,255,255,0.1);
-          border-radius: 20px;
-          padding: 6px 14px;
-          color: rgba(255,255,255,0.55);
-          font-family: 'Nunito', sans-serif;
-          font-size: 12px;
-          font-weight: 700;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: all 0.2s;
-          flex-shrink: 0;
-        }
-
-        .lang-chip.active {
-          background: #4a7fe0;
-          border-color: #4a7fe0;
-          color: #fff;
-        }
-
-        /* Post card */
-        .feed-post {
-          padding: 16px 16px 0;
-          border-bottom: 1px solid rgba(255,255,255,0.07);
-          animation: fadeUp 0.3s ease both;
-        }
-
-        @keyframes fadeUp {
-          from { opacity:0; transform:translateY(8px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
-
-        .post-header {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          margin-bottom: 10px;
-        }
-
-        .post-avatar {
-          width: 46px;
-          height: 46px;
-          border-radius: 50%;
-          border: 2px solid rgba(255,255,255,0.15);
-          background: linear-gradient(135deg, #4a7fe0, #2a4a8f);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          font-weight: 800;
-          color: white;
-          flex-shrink: 0;
-          overflow: hidden;
-          cursor: pointer;
-        }
-
-        .post-meta { flex: 1; }
-
-        .post-name {
-          color: #fff;
-          font-size: 14px;
-          font-weight: 800;
-          margin-bottom: 1px;
-          cursor: pointer;
-        }
-
-        .post-name:hover { text-decoration: underline; }
-
-        .post-handle {
-          color: rgba(255,255,255,0.4);
-          font-size: 11px;
-          font-weight: 600;
-          margin-bottom: 6px;
-        }
-
-        .post-time {
-          color: rgba(255,255,255,0.35);
-          font-size: 12px;
-          font-weight: 600;
-          flex-shrink: 0;
-        }
-
-        /* Post body */
-        .post-text {
-          color: rgba(255,255,255,0.85);
-          font-size: 14px;
-          font-weight: 600;
-          line-height: 1.55;
-          margin-bottom: 10px;
-        }
-
-        /* Translation box */
-        .post-translation {
-          background: rgba(255,255,255,0.07);
-          border-radius: 12px;
-          padding: 12px 14px;
-          color: rgba(255,255,255,0.6);
-          font-size: 13px;
-          font-weight: 600;
-          font-style: italic;
-          line-height: 1.5;
-          margin-bottom: 10px;
-          border-left: 3px solid #4a7fe0;
-        }
-
-        /* Topics */
-        .post-topics {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-bottom: 8px;
-        }
-
-        .post-topic-chip {
-          background: rgba(255,255,255,0.08);
-          border-radius: 20px;
-          padding: 4px 12px;
-          color: rgba(255,255,255,0.55);
-          font-size: 11px;
-          font-weight: 700;
-        }
-
-        /* Likes row */
-        .post-likes-row {
-          display: flex;
-          justify-content: flex-end;
-          color: rgba(255,255,255,0.3);
-          font-size: 12px;
-          font-weight: 700;
-          padding-bottom: 6px;
-        }
-
-        /* Actions */
-        .post-actions {
-          display: flex;
-          border-top: 1px solid rgba(255,255,255,0.06);
-          margin: 0 -16px;
-          padding: 0 16px;
-        }
-
-        .action-btn {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          background: none;
-          border: none;
-          color: rgba(255,255,255,0.45);
-          font-family: 'Nunito', sans-serif;
-          font-size: 13px;
-          font-weight: 700;
-          padding: 10px 0;
-          cursor: pointer;
-          transition: color 0.2s;
-        }
-
-        .action-btn:hover { color: rgba(255,255,255,0.8); }
-        .action-btn.liked { color: #f87171; }
-
-        .action-sep {
-          width: 1px;
-          background: rgba(255,255,255,0.06);
-          margin: 6px 0;
-        }
-
-        /* Empty state */
-        .feed-empty {
-          text-align: center;
-          padding: 60px 20px;
-          color: rgba(255,255,255,0.3);
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        /* Loading */
-        .feed-loading {
-          display: flex;
-          justify-content: center;
-          padding: 40px;
-          color: rgba(255,255,255,0.3);
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        /* Drawer overlay */
-        .drawer-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.55);
-          z-index: 200;
-          backdrop-filter: blur(3px);
-          animation: fadeIn 0.2s ease both;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-
-        /* Sidebar drawer */
-        .drawer {
-          position: fixed;
-          top: 0;
-          left: calc(50% - 195px);
-          height: 100%;
-          width: 292px;
-          background: linear-gradient(180deg, #1a3575 0%, #0f1c3f 100%);
-          z-index: 201;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 4px 0 32px rgba(0,0,0,0.5);
-          animation: slideIn 0.25s cubic-bezier(0.25,0.46,0.45,0.94) both;
-        }
-
-        @media (max-width: 390px) {
-          .drawer {
-            left: 0;
-            width: 75vw;
-          }
-        }
-
-        @keyframes slideIn {
-          from { transform: translateX(-100%); }
-          to   { transform: translateX(0); }
-        }
-
-        .drawer-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 52px 20px 24px;
-          border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .drawer-avatar {
-          width: 52px;
-          height: 52px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #4a7fe0, #2a4a8f);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          font-weight: 800;
-          color: white;
-          flex-shrink: 0;
-        }
-
-        .drawer-user-name {
-          color: #fff;
-          font-size: 15px;
-          font-weight: 800;
-        }
-
-        .drawer-user-handle {
-          color: rgba(255,255,255,0.4);
-          font-size: 12px;
-          font-weight: 600;
-          margin-top: 2px;
-        }
-
-        .drawer-menu { flex: 1; padding: 12px 0; overflow-y: auto; }
-
-        .drawer-item {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          padding: 14px 20px;
-          color: rgba(255,255,255,0.75);
-          font-family: 'Nunito', sans-serif;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          background: none;
-          border: none;
-          width: 100%;
-          text-align: left;
-          transition: background 0.15s, color 0.15s;
-          text-decoration: none;
-        }
-
-        .drawer-item:hover {
-          background: rgba(255,255,255,0.07);
-          color: #fff;
-        }
-
-        .drawer-item-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: rgba(255,255,255,0.08);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          flex-shrink: 0;
-        }
-
-        .drawer-sep {
-          height: 1px;
-          background: rgba(255,255,255,0.07);
-          margin: 8px 20px;
-        }
-
-        .drawer-item.logout {
-          color: #ff8fa3;
-          margin-top: 4px;
-        }
-
-        .drawer-item.logout .drawer-item-icon {
-          background: rgba(255,100,100,0.12);
-        }
-
-        .drawer-item.logout:hover {
-          background: rgba(255,100,100,0.08);
-          color: #ff8fa3;
-        }
-
-        .drawer-footer {
-          padding: 16px 20px 32px;
-          color: rgba(255,255,255,0.2);
-          font-size: 11px;
-          font-weight: 600;
-        }
-
-        /* Bottom nav */
-        .bottom-nav {
-          position: fixed;
-          bottom: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 100%;
-          max-width: 390px;
-          background: linear-gradient(180deg, rgba(15,28,63,0) 0%, rgba(10,20,50,0.97) 30%);
-          padding: 8px 0 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-around;
-          z-index: 100;
-        }
-
-        .nav-btn {
-          background: none;
-          border: none;
-          color: rgba(255,255,255,0.4);
-          font-size: 22px;
-          cursor: pointer;
-          padding: 8px 12px;
-          transition: color 0.2s;
-        }
-
-        .nav-btn:hover, .nav-btn.active { color: #fff; }
-
-        .nav-plus {
-          width: 52px;
-          height: 52px;
-          border-radius: 50%;
-          background: #4a7fe0;
-          border: none;
-          color: white;
-          font-size: 26px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 20px rgba(74,127,224,0.5);
-          transition: transform 0.15s;
-          margin-bottom: 4px;
-        }
-
-        .nav-plus:hover { transform: scale(1.08); }
-      `}</style>
-
-      <div className="feed-root">
-        <div className="feed-phone">
-
-          {/* Top bar */}
-          {/* ── Sidebar Drawer ── */}
+    <PhoneFrame>
+      <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none]">
+        {/* Full background layer */}
+        <div className="min-h-screen w-full bg-[#0f1c3f]">
+          {/* Drawer */}
           {drawerOpen && (
             <>
-              <div className="drawer-overlay" onClick={() => setDrawerOpen(false)} />
-              <div className="drawer">
-                {/* User info */}
-                <div className="drawer-header">
-                  <div className="drawer-avatar">
+              <div
+                className="fixed inset-0 z-[200] bg-black/55 backdrop-blur-sm"
+                onClick={() => setDrawerOpen(false)}
+              />
+
+              <div className="fixed top-0 left-[calc(50%-195px)] z-[201] flex h-full w-[292px] flex-col bg-gradient-to-b from-[#1a3575] to-[#0f1c3f] shadow-2xl">
+                <div className="flex items-center gap-3 border-b border-white/10 px-5 pb-6 pt-14">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] text-xl font-extrabold text-white">
                     {(me?.name || "U").charAt(0).toUpperCase()}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div className="drawer-user-name">{me?.name || "User"}</div>
-                    <div className="drawer-user-handle">@{me?.email?.split("@")[0] || "user"}</div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[15px] font-extrabold text-white">
+                      {me?.name || "User"}
+                    </div>
+                    <div className="mt-0.5 text-xs font-semibold text-white/40">
+                      @{me?.email?.split("@")[0] || "user"}
+                    </div>
                   </div>
+
                   <button
                     onClick={() => setDrawerOpen(false)}
-                    style={{
-                      background: "rgba(255,255,255,0.08)", border: "none",
-                      borderRadius: "50%", width: 32, height: 32,
-                      color: "rgba(255,255,255,0.6)", fontSize: 18,
-                      cursor: "pointer", display: "flex",
-                      alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >×</button>
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-0 bg-white/10 text-lg text-white/60"
+                  >
+                    ×
+                  </button>
                 </div>
 
-                {/* Menu items */}
-                <div className="drawer-menu">
-                  <Link to="/profile" className="drawer-item" onClick={() => setDrawerOpen(false)}>
-                    <div className="drawer-item-icon">👤</div>
-                    My Profile
-                  </Link>
+                <div className="flex-1 overflow-y-auto py-3">
+                  {[
+                    { to: "/profile", icon: "👤", label: "My Profile" },
+                    { to: "/feed", icon: "🏠", label: "Home Feed" },
+                    { to: "/messages", icon: "💬", label: "Messages" },
+                    { to: "/matches", icon: "🌐", label: "Find Partners" },
+                  ].map((item) => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setDrawerOpen(false)}
+                      className="flex items-center gap-3.5 px-5 py-3.5 text-sm font-bold text-white/75 no-underline transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-lg">
+                        {item.icon}
+                      </div>
+                      {item.label}
+                    </Link>
+                  ))}
 
-                  <Link to="/feed" className="drawer-item" onClick={() => setDrawerOpen(false)}>
-                    <div className="drawer-item-icon">🏠</div>
-                    Home Feed
-                  </Link>
+                  <div className="mx-5 my-2 h-px bg-white/10" />
 
-                  <Link to="/messages" className="drawer-item" onClick={() => setDrawerOpen(false)}>
-                    <div className="drawer-item-icon">💬</div>
-                    Messages
-                  </Link>
+                  {["🔔 Notifications", "⚙️ Settings", "❓ Help & Support"].map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => setDrawerOpen(false)}
+                      className="flex w-full cursor-pointer items-center gap-3.5 border-0 bg-transparent px-5 py-3.5 text-left text-sm font-bold text-white/75 transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-lg">
+                        {item.split(" ")[0]}
+                      </div>
+                      {item.split(" ").slice(1).join(" ")}
+                    </button>
+                  ))}
 
-                  <Link to="/matches" className="drawer-item" onClick={() => setDrawerOpen(false)}>
-                    <div className="drawer-item-icon">🌐</div>
-                    Find Partners
-                  </Link>
-
-                  <div className="drawer-sep" />
-
-                  <button className="drawer-item" onClick={() => setDrawerOpen(false)}>
-                    <div className="drawer-item-icon">🔔</div>
-                    Notifications
-                  </button>
-
-                  <button className="drawer-item" onClick={() => setDrawerOpen(false)}>
-                    <div className="drawer-item-icon">⚙️</div>
-                    Settings
-                  </button>
-
-                  <button className="drawer-item" onClick={() => setDrawerOpen(false)}>
-                    <div className="drawer-item-icon">❓</div>
-                    Help & Support
-                  </button>
-
-                  <div className="drawer-sep" />
+                  <div className="mx-5 my-2 h-px bg-white/10" />
 
                   <button
-                    className="drawer-item logout"
                     onClick={() => {
                       localStorage.removeItem("token");
                       localStorage.removeItem("user");
                       navigate("/login");
                     }}
+                    className="flex w-full cursor-pointer items-center gap-3.5 border-0 bg-transparent px-5 py-3.5 text-left text-sm font-bold text-[#ff8fa3] transition-colors hover:bg-red-500/10"
                   >
-                    <div className="drawer-item-icon">🚪</div>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-lg">
+                      🚪
+                    </div>
                     Log Out
                   </button>
                 </div>
 
-                <div className="drawer-footer">Bello! v1.0 · Language Exchange</div>
+                <div className="px-5 pb-8 text-[11px] font-semibold text-white/20">
+                  Bello! v1.0 · Language Exchange
+                </div>
               </div>
             </>
           )}
 
-          <div className="feed-topbar">
-            <div className="feed-logo" onClick={() => setDrawerOpen(true)} style={{ cursor: "pointer" }}>
-              <svg viewBox="0 0 40 40" width="28" height="28" fill="none">
-                <rect x="3" y="5" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"/>
-                <text x="7" y="15" fill="white" fontSize="9" fontWeight="800" fontFamily="Nunito">A</text>
-                <rect x="19" y="14" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"/>
-                <text x="23" y="24" fill="white" fontSize="8" fontWeight="800" fontFamily="Nunito">文</text>
-              </svg>
-            </div>
-
-            <div className="feed-search-wrap">
-              <span className="search-icon">🔍</span>
-              <input
-                ref={searchRef}
-                className="feed-search"
-                placeholder="Search"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="feed-tabs">
-            <button className={`feed-tab ${activeTab === "all" ? "active" : ""}`} onClick={() => setActiveTab("all")}>
-              All Posts
-            </button>
-            <button className={`feed-tab ${activeTab === "following" ? "active" : ""}`} onClick={() => setActiveTab("following")}>
-              Following
-            </button>
-          </div>
-
-          {/* Language filter */}
-          <div className="lang-filter-wrap">
-            {LANGUAGES.map(lang => (
-              <button
-                key={lang}
-                className={`lang-chip ${activeLang === lang ? "active" : ""}`}
-                onClick={() => setActiveLang(lang)}
-              >
-                {lang !== "All" && (LANG_FLAG[lang] || "")} {lang}
-              </button>
-            ))}
-          </div>
-
-          {/* Posts */}
-          {loading ? (
-            <div className="feed-loading">Loading posts...</div>
-          ) : filtered.length === 0 ? (
-            <div className="feed-empty">
-              <p style={{ fontSize: 32, marginBottom: 8 }}>📭</p>
-              <p>No posts found</p>
-            </div>
-          ) : (
-            filtered.map((post, idx) => {
-              const authorName = post.author?.name || "User";
-              const authorHandle = "@" + (post.author?.email?.split("@")[0] || "user");
-              const authorId = post.author?._id;
-              const isLiked = likedPosts.has(post._id);
-              const likesCount = (post.likes || 0) + (isLiked ? 1 : 0);
-
-              return (
-                <div key={post._id} className="feed-post" style={{ animationDelay: `${idx * 0.04}s` }}>
-
-                  <div className="post-header">
-                    {/* Avatar */}
-                    <div
-                      className="post-avatar"
-                      onClick={() => navigate(authorId === me?.id ? "/profile" : `/profile/${authorId}`)}
+          {/* Centered mobile content */}
+          <div className="relative mx-auto w-full max-w-[390px] min-h-screen pb-24">
+            {/* Topbar */}
+            <div className="sticky top-0 z-50 bg-[#0f1c3f] px-6 py-5 border-b border-white/[0.06]">
+              <div className="flex items-center gap-3">
+                <div
+                  onClick={() => setDrawerOpen(true)}
+                  className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-[#1a2d6b]"
+                >
+                  <svg viewBox="0 0 40 40" width="28" height="28" fill="none">
+                    <rect
+                      x="3"
+                      y="5"
+                      width="18"
+                      height="14"
+                      rx="3"
+                      fill="rgba(255,255,255,0.15)"
+                      stroke="rgba(255,255,255,0.6)"
+                      strokeWidth="1.5"
+                    />
+                    <text
+                      x="7"
+                      y="15"
+                      fill="white"
+                      fontSize="9"
+                      fontWeight="800"
+                      fontFamily="Nunito"
                     >
-                      {authorName.charAt(0).toUpperCase()}
-                    </div>
-
-                    <div className="post-meta">
-                      {/* Name + handle */}
-                      <div
-                        className="post-name"
-                        onClick={() => navigate(authorId === me?.id ? "/profile" : `/profile/${authorId}`)}
-                      >
-                        {authorName}
-                      </div>
-                      <div className="post-handle">{authorHandle}</div>
-
-                      {/* Lang bar */}
-                      <LangBar
-                        nativeLang={post.nativeLanguage}
-                        learningLangs={post.learningLanguage ? [{ language: post.learningLanguage, level: "B1" }] : []}
-                      />
-                    </div>
-
-                    <span className="post-time">{timeAgo(post.createdAt)}</span>
-                  </div>
-
-                  {/* Post text */}
-                  <p className="post-text">{post.text}</p>
-
-                  {/* Topics */}
-                  {post.topics?.length > 0 && (
-                    <div className="post-topics">
-                      {post.topics.map(t => (
-                        <span key={t} className="post-topic-chip">{t}</span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Likes count */}
-                  <div className="post-likes-row">
-                    <span>{likesCount} likes &nbsp; {post.comments?.length || 0} comments</span>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="post-actions">
-                    <button className={`action-btn ${isLiked ? "liked" : ""}`} onClick={() => toggleLike(post._id)}>
-                      <span style={{ fontSize:16 }}>{isLiked ? "❤️" : "🤍"}</span> Like
-                    </button>
-                    <div className="action-sep"/>
-                    <button className="action-btn">
-                      <span style={{ fontSize:16 }}>💬</span> Comment
-                    </button>
-                    <div className="action-sep"/>
-                    <button className="action-btn">
-                      <span style={{ fontSize:16 }}>🌐</span> Translate
-                    </button>
-                  </div>
+                      A
+                    </text>
+                    <rect
+                      x="19"
+                      y="14"
+                      width="18"
+                      height="14"
+                      rx="3"
+                      fill="rgba(255,255,255,0.15)"
+                      stroke="rgba(255,255,255,0.6)"
+                      strokeWidth="1.5"
+                    />
+                    <text
+                      x="23"
+                      y="24"
+                      fill="white"
+                      fontSize="8"
+                      fontWeight="800"
+                      fontFamily="Nunito"
+                    >
+                      文
+                    </text>
+                  </svg>
                 </div>
-              );
-            })
-          )}
-        </div>
 
-        {/* Bottom nav */}
-        <nav className="bottom-nav">
-          <Link to="/feed"><button className="nav-btn active">🏠</button></Link>
-          <Link to="/messages"><button className="nav-btn">💬</button></Link>
-          <button className="nav-plus" onClick={() => navigate("/posts/new")}>+</button>
-          <Link to="/profile"><button className="nav-btn">👤</button></Link>
-          <Link to="/matches"><button className="nav-btn">📋</button></Link>
-        </nav>
+                <div className="relative flex-1">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/35">
+                    🔍
+                  </span>
+                  <input
+                    ref={searchRef}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search"
+                    className="w-full rounded-full border border-white/10 bg-white/10 py-2.5 pl-9 pr-4 text-[13px] font-semibold text-white outline-none transition-all placeholder:text-white/30 focus:border-white/25 focus:bg-white/12"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Feed content */}
+            <div className="min-h-full w-full bg-gradient-to-br from-[#1a3575] via-[#1a2d6b] to-[#162860] px-5 py-10">
+              {/* Tabs */}
+              <div className="flex border-b border-white/[0.07] px-4 pt-3">
+                {[
+                  { val: "all", label: "All Posts" },
+                  { val: "following", label: "Following" },
+                ].map((tab) => (
+                  <button
+                    key={tab.val}
+                    onClick={() => setActiveTab(tab.val)}
+                    className={`relative flex-1 border-0 bg-transparent pb-3 text-[13px] font-extrabold transition-colors ${
+                      activeTab === tab.val ? "text-white" : "text-white/40"
+                    }`}
+                  >
+                    {tab.label}
+                    {activeTab === tab.val && (
+                      <span className="absolute bottom-[-1px] left-[20%] block h-[2.5px] w-[60%] rounded-sm bg-[#4a7fe0]" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Language filter */}
+              <div
+                className="flex gap-2 overflow-x-auto border-b border-white/[0.06] px-4 py-3"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setActiveLang(lang)}
+                    className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-xs font-bold transition-all ${
+                      activeLang === lang
+                        ? "border-[#4a7fe0] bg-[#4a7fe0] text-white"
+                        : "border-white/10 bg-white/10 text-white/55 hover:bg-white/15"
+                    }`}
+                  >
+                    {lang !== "All" && (LANG_FLAG[lang] || "")} {lang}
+                  </button>
+                ))}
+              </div>
+
+              {/* Posts */}
+              {loading ? (
+                <div className="flex justify-center p-10 text-sm text-white/30">
+                  Loading posts...
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="py-16 text-center text-sm text-white/30">
+                  <p className="mb-2 text-4xl">📭</p>
+                  <p>No posts found</p>
+                </div>
+              ) : (
+                filtered.map((post) => {
+                  const authorName = post.author?.name || "User";
+                  const authorHandle = "@" + (post.author?.email?.split("@")[0] || "user");
+                  const authorId = post.author?._id;
+                  const isLiked = likedPosts.has(post._id);
+                  const likesCount = (post.likes || 0) + (isLiked ? 1 : 0);
+
+                  return (
+                    <div
+                      key={post._id}
+                      className="border-b border-white/[0.07] px-4 pt-4"
+                    >
+                      <div className="mb-2.5 flex items-start gap-2.5">
+                        <div
+                          onClick={() =>
+                            navigate(authorId === me?.id ? "/profile" : `/profile/${authorId}`)
+                          }
+                          className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-white/15 bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] text-lg font-extrabold text-white"
+                        >
+                          {authorName.charAt(0).toUpperCase()}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div
+                            onClick={() =>
+                              navigate(authorId === me?.id ? "/profile" : `/profile/${authorId}`)
+                            }
+                            className="mb-0.5 cursor-pointer text-sm font-extrabold text-white hover:underline"
+                          >
+                            {authorName}
+                          </div>
+
+                          <div className="mb-1.5 text-[11px] font-semibold text-white/40">
+                            {authorHandle}
+                          </div>
+
+                          <LangBar
+                            nativeLang={post.nativeLanguage}
+                            learningLangs={
+                              post.learningLanguage
+                                ? [{ language: post.learningLanguage, level: "B1" }]
+                                : []
+                            }
+                          />
+                        </div>
+
+                        <span className="shrink-0 text-xs font-semibold text-white/35">
+                          {timeAgo(post.createdAt)}
+                        </span>
+                      </div>
+
+                      <p className="mb-2.5 text-sm font-semibold leading-[1.55] text-white/85">
+                        {post.text}
+                      </p>
+
+                      {post.topics?.length > 0 && (
+                        <div className="mb-2 flex flex-wrap gap-1.5">
+                          {post.topics.map((t) => (
+                            <span
+                              key={t}
+                              className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold text-white/55"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex justify-end pb-1.5 text-xs font-bold text-white/30">
+                        {likesCount} likes &nbsp; {post.comments?.length || 0} comments
+                      </div>
+
+                      <div className="-mx-4 flex border-t border-white/[0.06]">
+                        {[
+                          {
+                            label: "Like",
+                            icon: isLiked ? "❤️" : "🤍",
+                            active: isLiked,
+                            onClick: () => toggleLike(post._id),
+                          },
+                          {
+                            label: "Comment",
+                            icon: "💬",
+                            active: false,
+                            onClick: () => {},
+                          },
+                          {
+                            label: "Translate",
+                            icon: "🌐",
+                            active: false,
+                            onClick: () => {},
+                          },
+                        ].map((action, i) => (
+                          <button
+                            key={action.label}
+                            onClick={action.onClick}
+                            className={`flex flex-1 items-center justify-center gap-1.5 border-0 bg-transparent py-2.5 text-xs font-bold transition-colors ${
+                              action.active
+                                ? "text-red-400"
+                                : "text-white/45 hover:text-white/80"
+                            } ${i > 0 ? "border-l border-white/[0.06]" : ""}`}
+                          >
+                            <span className="text-base">{action.icon}</span>
+                            {action.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+
+      <BottomNav />
+    </PhoneFrame>
   );
 }

@@ -1,4 +1,3 @@
-// src/pages/admin/AdminTags.jsx
 import { useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
 
@@ -19,7 +18,7 @@ export default function AdminTags() {
   const [page, setPage]         = useState(1);
   const [selected, setSelected] = useState(new Set());
 
-  const filtered = tags.filter(t => t.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered   = tags.filter(t => t.name.toLowerCase().includes(search.toLowerCase()));
   const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
   const paginated  = filtered.slice((page-1)*ROWS_PER_PAGE, page*ROWS_PER_PAGE);
 
@@ -41,232 +40,179 @@ export default function AdminTags() {
     setEditId(null);
   };
 
-  const toggleSelect = (id) => {
-    setSelected(prev => {
-      const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
-  };
+  const toggleSelect = (id) => setSelected(prev => {
+    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
 
-  const toggleAll = () => {
-    if (selected.size === paginated.length) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(paginated.map(t => t.id)));
-    }
-  };
+  const toggleAll = () =>
+    setSelected(selected.size === paginated.length ? new Set() : new Set(paginated.map(t => t.id)));
 
   return (
     <AdminLayout>
-      <style>{`
-        .at-header { margin-bottom: 24px; }
-        .at-title  { color: #1a2d6b; font-size: 22px; font-weight: 900; margin-bottom: 4px; }
-        .at-sub    { color: #6b7fa3; font-size: 13px; font-weight: 600; }
+      <div style={{ fontFamily:"'Nunito',sans-serif" }}>
 
-        .at-filter-bar {
-          background: #1a2d6b; border-radius: 16px;
-          padding: 16px 20px;
-          display: flex; align-items: center; gap: 12px;
-          margin-bottom: 24px;
-        }
-
-        .at-search-wrap { position: relative; flex: 1; }
-        .at-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.4); font-size: 14px; }
-        .at-search {
-          width: 100%;
-          background: rgba(255,255,255,0.1);
-          border: 1.5px solid rgba(255,255,255,0.15);
-          border-radius: 22px;
-          padding: 9px 16px 9px 36px;
-          color: #fff; font-family: 'Nunito',sans-serif;
-          font-size: 13px; font-weight: 600; outline: none;
-        }
-        .at-search::placeholder { color: rgba(255,255,255,0.35); }
-
-        /* Main card */
-        .at-card {
-          background: #1a2d6b; border-radius: 16px;
-          padding: 24px;
-        }
-
-        /* Add tag section */
-        .at-add-section {
-          display: flex; gap: 12px; margin-bottom: 24px;
-        }
-
-        .at-add-input {
-          flex: 1;
-          background: rgba(255,255,255,0.08);
-          border: 1.5px solid rgba(255,255,255,0.12);
-          border-radius: 12px;
-          padding: 11px 16px;
-          color: #fff; font-family: 'Nunito',sans-serif;
-          font-size: 14px; font-weight: 600; outline: none;
-        }
-        .at-add-input::placeholder { color: rgba(255,255,255,0.3); }
-        .at-add-input:focus { border-color: rgba(255,255,255,0.3); }
-
-        .at-add-btn {
-          background: #4a7fe0; border: none; border-radius: 12px;
-          padding: 11px 20px; color: #fff;
-          font-family: 'Nunito',sans-serif; font-size: 13px; font-weight: 800;
-          cursor: pointer; white-space: nowrap;
-          transition: background 0.2s;
-        }
-        .at-add-btn:hover { background: #5a8ff0; }
-
-        /* Table */
-        .at-table { width: 100%; border-collapse: collapse; }
-
-        .at-table th {
-          color: rgba(255,255,255,0.5);
-          font-size: 12px; font-weight: 800;
-          text-transform: uppercase; letter-spacing: 0.5px;
-          padding: 10px 12px; text-align: left;
-          border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .at-table td {
-          padding: 12px;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
-          color: rgba(255,255,255,0.8);
-          font-size: 14px; font-weight: 600;
-          vertical-align: middle;
-        }
-
-        .at-table tr:last-child td { border-bottom: none; }
-        .at-table tr:hover td { background: rgba(255,255,255,0.03); }
-
-        .at-id-cell { color: rgba(255,255,255,0.35); font-family: monospace; font-size: 13px; }
-
-        .at-edit-input {
-          background: rgba(255,255,255,0.1);
-          border: 1.5px solid #4a7fe0;
-          border-radius: 8px;
-          padding: 6px 12px;
-          color: #fff; font-family: 'Nunito',sans-serif;
-          font-size: 13px; font-weight: 600; outline: none;
-          width: 100%;
-        }
-
-        .at-action-btn {
-          background: none; border: none; cursor: pointer;
-          font-size: 15px; padding: 4px 6px;
-          transition: opacity 0.2s;
-        }
-        .at-action-btn:hover { opacity: 0.7; }
-
-        /* Pagination */
-        .at-pagination {
-          display: flex; align-items: center; justify-content: flex-end;
-          gap: 4px; margin-top: 16px;
-        }
-
-        .at-page-btn {
-          width: 30px; height: 30px; border-radius: 8px;
-          background: rgba(255,255,255,0.08); border: none;
-          color: rgba(255,255,255,0.6); font-family: 'Nunito',sans-serif;
-          font-size: 12px; font-weight: 700; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          transition: background 0.15s;
-        }
-        .at-page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); color: #fff; }
-        .at-page-btn.active { background: #4a7fe0; color: #fff; }
-        .at-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-      `}</style>
-
-      <div className="at-header">
-        <h1 className="at-title">Tag Management</h1>
-        <p className="at-sub">Manage all tags in one place.</p>
-      </div>
-
-      {/* Search bar */}
-      <div className="at-filter-bar">
-        <div className="at-search-wrap">
-          <span className="at-search-icon">🔍</span>
-          <input className="at-search" placeholder="Search" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
-        </div>
-      </div>
-
-      <div className="at-card">
-        {/* Add tag */}
-        <div className="at-add-section">
-          <input
-            className="at-add-input"
-            placeholder="Text to create a tag"
-            value={newTag}
-            onChange={e => setNewTag(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleAdd()}
-          />
-          <button className="at-add-btn" onClick={handleAdd}>+ Add Tag</button>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-[#1a2d6b] text-2xl font-black mb-1">Tag Management</h1>
+          <p className="text-[#6b7fa3] text-sm font-semibold">Manage all tags in one place.</p>
         </div>
 
-        {/* Table */}
-        <table className="at-table">
-          <thead>
-            <tr>
-              <th style={{ width:40 }}>
-                <input type="checkbox"
-                  checked={selected.size === paginated.length && paginated.length > 0}
-                  onChange={toggleAll}
-                />
-              </th>
-              <th>Tag Id</th>
-              <th>Tag Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginated.length === 0 ? (
-              <tr><td colSpan={4} style={{ textAlign:"center", padding:32, color:"rgba(255,255,255,0.3)" }}>No tags found</td></tr>
-            ) : paginated.map(tag => (
-              <tr key={tag.id}>
-                <td><input type="checkbox" checked={selected.has(tag.id)} onChange={() => toggleSelect(tag.id)} /></td>
-                <td className="at-id-cell">{String(tag.id).padStart(4,"0")}</td>
-                <td>
-                  {editId === tag.id ? (
-                    <input
-                      className="at-edit-input"
-                      value={editVal}
-                      onChange={e => setEditVal(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter") handleEditSave(tag.id);
-                        if (e.key === "Escape") setEditId(null);
-                      }}
-                      autoFocus
+        {/* Search bar */}
+        <div className="bg-[#1a2d6b] rounded-2xl px-5 py-4 flex items-center gap-3 mb-6">
+          <div className="relative flex-1 max-w-sm">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm pointer-events-none">🔍</span>
+            <input
+              placeholder="Search tags..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              className="w-full bg-white/10 border border-white/15 rounded-full py-2 pl-9 pr-4
+                text-white text-sm font-semibold outline-none placeholder:text-white/35
+                focus:border-white/30 transition-all"
+            />
+          </div>
+          <span className="text-white/40 text-sm font-semibold ml-auto">{filtered.length} tags</span>
+        </div>
+
+        {/* Main card */}
+        <div className="bg-[#1a2d6b] rounded-2xl p-6">
+
+          {/* Add tag */}
+          <div className="flex gap-3 mb-6">
+            <input
+              placeholder="Text to create a tag"
+              value={newTag}
+              onChange={e => setNewTag(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleAdd()}
+              className="flex-1 bg-white/8 border border-white/12 rounded-xl py-2.5 px-4
+                text-white text-sm font-semibold outline-none placeholder:text-white/30
+                focus:border-white/30 transition-all"
+            />
+            <button onClick={handleAdd}
+              className="bg-[#4a7fe0] border-0 rounded-xl px-5 py-2.5 text-white text-sm font-extrabold
+                cursor-pointer whitespace-nowrap hover:bg-[#5a8ff0] transition-colors">
+              + Add Tag
+            </button>
+          </div>
+
+          {/* Table — desktop */}
+          <div className="overflow-x-auto hidden sm:block">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="w-10 pb-3 text-left">
+                    <input type="checkbox"
+                      checked={selected.size === paginated.length && paginated.length > 0}
+                      onChange={toggleAll}
+                      className="accent-[#4a7fe0] w-4 h-4 cursor-pointer"
                     />
-                  ) : tag.name}
-                </td>
-                <td>
+                  </th>
+                  {["Tag Id","Tag Name","Actions"].map(h => (
+                    <th key={h} className="pb-3 text-left text-white/50 text-xs font-extrabold uppercase tracking-wider border-b border-white/10">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.length === 0 ? (
+                  <tr><td colSpan={4} className="text-center py-8 text-white/30 text-sm">No tags found</td></tr>
+                ) : paginated.map(tag => (
+                  <tr key={tag.id} className="group border-b border-white/[0.05] last:border-0 hover:bg-white/[0.03] transition-colors">
+                    <td className="py-3 pr-3">
+                      <input type="checkbox" checked={selected.has(tag.id)} onChange={() => toggleSelect(tag.id)}
+                        className="accent-[#4a7fe0] w-4 h-4 cursor-pointer" />
+                    </td>
+                    <td className="py-3 pr-6 text-white/35 font-mono text-sm">{String(tag.id).padStart(4,"0")}</td>
+                    <td className="py-3 pr-6 text-white/85 text-sm font-semibold">
+                      {editId === tag.id ? (
+                        <input value={editVal} onChange={e => setEditVal(e.target.value)} autoFocus
+                          onKeyDown={e => { if (e.key==="Enter") handleEditSave(tag.id); if (e.key==="Escape") setEditId(null); }}
+                          className="bg-white/10 border border-[#4a7fe0] rounded-lg py-1.5 px-3 text-white text-sm font-semibold outline-none w-full max-w-xs" />
+                      ) : tag.name}
+                    </td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-1">
+                        {editId === tag.id ? (
+                          <>
+                            <button onClick={() => handleEditSave(tag.id)}
+                              className="bg-transparent border-0 text-base cursor-pointer p-1.5 hover:opacity-70 transition-opacity">✅</button>
+                            <button onClick={() => setEditId(null)}
+                              className="bg-transparent border-0 text-base cursor-pointer p-1.5 hover:opacity-70 transition-opacity">❌</button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => { setEditId(tag.id); setEditVal(tag.name); }}
+                              className="bg-transparent border-0 text-base cursor-pointer p-1.5 hover:opacity-70 transition-opacity" title="Edit">✏️</button>
+                            <button onClick={() => handleDelete(tag.id)}
+                              className="bg-transparent border-0 text-base cursor-pointer p-1.5 hover:opacity-70 transition-opacity" title="Delete">🗑️</button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="sm:hidden space-y-2">
+            {paginated.length === 0 ? (
+              <p className="text-center py-8 text-white/30 text-sm">No tags found</p>
+            ) : paginated.map(tag => (
+              <div key={tag.id} className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
+                <input type="checkbox" checked={selected.has(tag.id)} onChange={() => toggleSelect(tag.id)}
+                  className="accent-[#4a7fe0] w-4 h-4 cursor-pointer shrink-0" />
+                <span className="text-white/35 font-mono text-xs shrink-0">{String(tag.id).padStart(4,"0")}</span>
+                <div className="flex-1 min-w-0">
+                  {editId === tag.id ? (
+                    <input value={editVal} onChange={e => setEditVal(e.target.value)} autoFocus
+                      onKeyDown={e => { if (e.key==="Enter") handleEditSave(tag.id); if (e.key==="Escape") setEditId(null); }}
+                      className="bg-white/10 border border-[#4a7fe0] rounded-lg py-1 px-2 text-white text-sm font-semibold outline-none w-full" />
+                  ) : (
+                    <span className="text-white/85 text-sm font-semibold truncate block">{tag.name}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-0.5 shrink-0">
                   {editId === tag.id ? (
                     <>
-                      <button className="at-action-btn" onClick={() => handleEditSave(tag.id)} title="Save">✅</button>
-                      <button className="at-action-btn" onClick={() => setEditId(null)} title="Cancel">❌</button>
+                      <button onClick={() => handleEditSave(tag.id)} className="bg-transparent border-0 text-base cursor-pointer p-1">✅</button>
+                      <button onClick={() => setEditId(null)} className="bg-transparent border-0 text-base cursor-pointer p-1">❌</button>
                     </>
                   ) : (
                     <>
-                      <button className="at-action-btn" onClick={() => { setEditId(tag.id); setEditVal(tag.name); }} title="Edit">✏️</button>
-                      <button className="at-action-btn" onClick={() => handleDelete(tag.id)} title="Delete">🗑️</button>
+                      <button onClick={() => { setEditId(tag.id); setEditVal(tag.name); }} className="bg-transparent border-0 text-base cursor-pointer p-1">✏️</button>
+                      <button onClick={() => handleDelete(tag.id)} className="bg-transparent border-0 text-base cursor-pointer p-1">🗑️</button>
                     </>
                   )}
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
 
-        {/* Pagination */}
-        <div className="at-pagination">
-          <button className="at-page-btn" onClick={() => setPage(1)} disabled={page===1}>«</button>
-          <button className="at-page-btn" onClick={() => setPage(p=>p-1)} disabled={page===1}>‹</button>
-          {Array.from({ length: Math.min(totalPages, 5) }, (_,i) => i+1).map(p => (
-            <button key={p} className={`at-page-btn ${page===p?"active":""}`} onClick={() => setPage(p)}>{p}</button>
-          ))}
-          {totalPages > 5 && <button className="at-page-btn" disabled>…</button>}
-          <button className="at-page-btn" onClick={() => setPage(p=>p+1)} disabled={page===totalPages}>›</button>
-          <button className="at-page-btn" onClick={() => setPage(totalPages)} disabled={page===totalPages}>»</button>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end gap-1 mt-5">
+              <button onClick={() => setPage(1)} disabled={page===1}
+                className="w-8 h-8 rounded-lg bg-white/8 border-0 text-white/60 text-xs font-bold cursor-pointer flex items-center justify-center hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all">«</button>
+              <button onClick={() => setPage(p=>p-1)} disabled={page===1}
+                className="w-8 h-8 rounded-lg bg-white/8 border-0 text-white/60 text-xs font-bold cursor-pointer flex items-center justify-center hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all">‹</button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_,i) => i+1).map(p => (
+                <button key={p} onClick={() => setPage(p)}
+                  className={`w-8 h-8 rounded-lg border-0 text-xs font-bold cursor-pointer flex items-center justify-center transition-all
+                    ${page===p ? "bg-[#4a7fe0] text-white" : "bg-white/8 text-white/60 hover:bg-white/15"}`}>
+                  {p}
+                </button>
+              ))}
+              {totalPages > 5 && <span className="w-8 h-8 flex items-center justify-center text-white/30 text-xs">…</span>}
+              <button onClick={() => setPage(p=>p+1)} disabled={page===totalPages}
+                className="w-8 h-8 rounded-lg bg-white/8 border-0 text-white/60 text-xs font-bold cursor-pointer flex items-center justify-center hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all">›</button>
+              <button onClick={() => setPage(totalPages)} disabled={page===totalPages}
+                className="w-8 h-8 rounded-lg bg-white/8 border-0 text-white/60 text-xs font-bold cursor-pointer flex items-center justify-center hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all">»</button>
+            </div>
+          )}
         </div>
+
       </div>
     </AdminLayout>
   );
