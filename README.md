@@ -5,6 +5,15 @@ A full-stack web application that connects language learners around the world. U
 > **Live API:** http://13.54.163.145:5000  
 > **GitHub:** https://github.com/Preeyaries/language_exchange_platform
 
+
+//User Account
+//Username:
+//password:
+
+//Admin Account
+//Username:
+//password:
+
 ---
 
 ## Features
@@ -18,7 +27,6 @@ A full-stack web application that connects language learners around the world. U
 - **CI/CD** — GitHub Actions pipeline with Jest tests, deployed on AWS EC2 with PM2
 
 ---
-
 
 ### Frontend
 | Technology | Version |
