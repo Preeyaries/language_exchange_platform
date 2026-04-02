@@ -70,16 +70,25 @@ exports.getProfileById = async (req, res) => {
 // PUT /api/profile  — update own profile
 exports.updateMyProfile = async (req, res) => {
   try {
+    const updateData = { ...req.body };
+
+    if (req.body.dateOfBirth) {
+      const age = Math.floor((Date.now() - new Date(req.body.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000));
+      if (age < 18)      updateData.ageRange = "Under 18";
+      else if (age <= 24) updateData.ageRange = "18-24";
+      else if (age <= 34) updateData.ageRange = "25-34";
+      else if (age <= 44) updateData.ageRange = "35-44";
+      else if (age <= 54) updateData.ageRange = "45-54";
+      else                updateData.ageRange = "55+";
+    }
+
     const profile = await Profile.findOneAndUpdate(
       { user: req.user.id },
-      { $set: req.body },
+      { $set: updateData },
       { new: true, runValidators: true }
     );
 
-    if (!profile) {
-      return res.status(404).json({ message: "Profile not found" });
-    }
-
+    if (!profile) return res.status(404).json({ message: "Profile not found" });
     return res.json(profile);
   } catch (error) {
     return res.status(500).json({ message: error.message });

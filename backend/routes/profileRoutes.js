@@ -11,7 +11,7 @@ const {
  
 router.post("/", auth, createProfile);
 router.get("/", auth, getMyProfile);
-router.get("/:id", auth, getProfileById);   // ← ดู profile คนอื่น
+router.get("/:id", auth, getProfileById);   
 router.put("/", auth, updateMyProfile);
  
 module.exports = router;

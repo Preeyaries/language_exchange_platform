@@ -24,31 +24,39 @@ const ALL_INTERESTS = [
   "Dance","Nature","Anime","Reading",
 ];
 
-const FieldInput = ({ icon, ...props }) => (
+const FieldInput = ({ icon, rightEl, ...props }) => (
   <div className="relative mb-3.5">
     {icon && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/35 text-[15px] pointer-events-none">{icon}</span>}
     <input
-      className={`w-full bg-white/12 border border-white/10 rounded-2xl py-3.5 ${icon ? "pl-11" : "pl-4"} pr-4
+      className={`w-full bg-white/12 border border-white/10 rounded-2xl py-3.5 ${icon ? "pl-11" : "pl-4"} ${rightEl ? "pr-11" : "pr-4"}
         text-white text-sm font-semibold outline-none placeholder:text-white/30
         focus:border-white/35 focus:bg-white/16 transition-all`}
       {...props}
     />
+    {rightEl}
   </div>
 );
 
+const PwToggle = ({ show, toggle }) => (
+  <button type="button" onClick={toggle}
+    className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-0 text-white/40 text-sm cursor-pointer">
+    {show ? "🙈" : "👁"}
+  </button>
+);
+
 export default function EditProfile() {
-  const navigate  = useNavigate();
-  const [loading, setLoading]   = useState(true);
-  const [saving, setSaving]     = useState(false);
-  const [message, setMessage]   = useState("");
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving]   = useState(false);
+  const [message, setMessage] = useState("");
+  const [showPw, setShowPw]   = useState(false);
+  const [showCpw, setShowCpw] = useState(false);
 
   const [form, setForm] = useState({
-    // Personal
+    name:"", email:"", password:"", confirmPassword:"",
     dateOfBirth:"", gender:"", country:"", city:"",
-    // Language
     nativeLanguage:"",
     learningLanguages:[{ language:"", level:"" }],
-    // Interests & bio
     interests:[], bio:"",
   });
 
@@ -57,9 +65,16 @@ export default function EditProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await API.get("/profile");
-        const p   = res.data.profile || res.data;
-        setForm({
+        const [profileRes, meRes] = await Promise.all([
+          API.get("/profile"),
+          API.get("/auth/me"),
+        ]);
+        const p  = profileRes.data.profile || profileRes.data;
+        const me = meRes.data;
+        setForm(f => ({
+          ...f,
+          name: me.name || "",
+          email: me.email || "",
           dateOfBirth: p.dateOfBirth?.slice(0,10) || "",
           gender: p.gender || "",
           country: p.country || "",
@@ -70,7 +85,7 @@ export default function EditProfile() {
             : [{ language:"", level:"" }],
           interests: p.interests || [],
           bio: p.bio || "",
-        });
+        }));
       } catch {}
       finally { setLoading(false); }
     };
@@ -85,11 +100,19 @@ export default function EditProfile() {
     set("interests", form.interests.includes(item) ? form.interests.filter(x => x !== item) : [...form.interests, item]);
 
   const handleSave = async () => {
-    setSaving(true);
-    setMessage("");
+    if (form.password && form.password !== form.confirmPassword) {
+      setMessage("Passwords do not match."); return;
+    }
+    setSaving(true); setMessage("");
     try {
+      // ── 1. Update name (+ password ถ้ามี) ที่ User model ──
+      const accountPayload = { name: form.name };
+      if (form.password) accountPayload.password = form.password;
+      await API.put("/auth/me", accountPayload);
+
+      // ── 2. Update Profile ──
       await API.put("/profile", {
-        dateOfBirth: form.dateOfBirth,
+        dateOfBirth: form.dateOfBirth || undefined,
         gender: form.gender,
         country: form.country,
         city: form.city,
@@ -98,6 +121,11 @@ export default function EditProfile() {
         interests: form.interests,
         bio: form.bio,
       });
+
+      // ── 3. Update localStorage ──
+      const stored = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...stored, name: form.name }));
+
       setMessage("Profile updated!");
       setTimeout(() => navigate("/profile"), 1000);
     } catch (err) {
@@ -133,6 +161,32 @@ export default function EditProfile() {
 
         <div className="px-5 py-6 space-y-6">
 
+          {/* ── Account Info ── */}
+          <div>
+            <h2 className="text-white text-base font-black mb-4 pb-2 border-b border-white/10">Account Information</h2>
+
+            <label className="block text-white/70 text-[13px] font-bold mb-2">Full Name</label>
+            <FieldInput icon="👤" placeholder="Full Name" value={form.name}
+              onChange={e => set("name", e.target.value)} />
+
+            <label className="block text-white/70 text-[13px] font-bold mb-2">Email</label>
+            <FieldInput icon="✉" type="email" placeholder="Email" value={form.email}
+              onChange={e => set("email", e.target.value)} />
+
+            <label className="block text-white/70 text-[13px] font-bold mb-2">
+              New Password{" "}
+              <span className="text-white/30 font-semibold">(leave blank to keep current)</span>
+            </label>
+            <FieldInput icon="🔒" type={showPw ? "text" : "password"} placeholder="New Password"
+              value={form.password} onChange={e => set("password", e.target.value)}
+              rightEl={<PwToggle show={showPw} toggle={() => setShowPw(!showPw)} />} />
+
+            <label className="block text-white/70 text-[13px] font-bold mb-2">Confirm Password</label>
+            <FieldInput icon="🔒" type={showCpw ? "text" : "password"} placeholder="Confirm Password"
+              value={form.confirmPassword} onChange={e => set("confirmPassword", e.target.value)}
+              rightEl={<PwToggle show={showCpw} toggle={() => setShowCpw(!showCpw)} />} />
+          </div>
+
           {/* ── Personal Info ── */}
           <div>
             <h2 className="text-white text-base font-black mb-4 pb-2 border-b border-white/10">Personal Information</h2>
@@ -156,10 +210,12 @@ export default function EditProfile() {
             </div>
 
             <label className="block text-white/70 text-[13px] font-bold mb-2">Country</label>
-            <FieldInput placeholder="e.g. Thailand" value={form.country} onChange={e => set("country", e.target.value)} />
+            <FieldInput placeholder="e.g. Thailand" value={form.country}
+              onChange={e => set("country", e.target.value)} />
 
             <label className="block text-white/70 text-[13px] font-bold mb-2">City</label>
-            <FieldInput placeholder="e.g. Bangkok" value={form.city} onChange={e => set("city", e.target.value)} />
+            <FieldInput placeholder="e.g. Bangkok" value={form.city}
+              onChange={e => set("city", e.target.value)} />
           </div>
 
           {/* ── Language ── */}
@@ -252,7 +308,7 @@ export default function EditProfile() {
             </p>
           )}
 
-          {/* Bottom save button */}
+          {/* Bottom save */}
           <button onClick={handleSave} disabled={saving}
             className="w-full bg-[#4a7fe0] border-0 rounded-2xl py-4 text-white text-[15px] font-extrabold cursor-pointer
               shadow-[0_6px_20px_rgba(74,127,224,0.4)] hover:bg-[#5a8ff0]

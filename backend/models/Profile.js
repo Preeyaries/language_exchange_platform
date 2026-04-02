@@ -8,8 +8,8 @@ const profileSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    ageRange: {
-      type: String,
+    dateOfBirth: {
+      type: Date,
       trim: true,
     },
     gender: {
