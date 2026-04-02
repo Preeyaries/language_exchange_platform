@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Posts from "./pages/Posts";
+import MyPosts from "./pages/MyPosts";
 import Feed from "./pages/Feed";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
@@ -12,6 +13,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminPosts from "./pages/admin/AdminPosts";
 import AdminTags from "./pages/admin/AdminTags";
 import AdminAddEditUser from "./pages/admin/AdminAddEditUser";
+import EditProfile from "./pages/EditProfile";
 
 function App() {
   return (
@@ -21,15 +23,21 @@ function App() {
         <Route path="/login"    element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* User routes — ProtectedRoute (redirect admin → /admin/users) */}
+        {/* User routes */}
         <Route path="/profile" element={
           <ProtectedRoute><Profile /></ProtectedRoute>
         } />
         <Route path="/profile/:id" element={
           <ProtectedRoute><Profile /></ProtectedRoute>
         } />
+        <Route path="/profile/edit" element={
+        <ProtectedRoute><EditProfile /></ProtectedRoute>
+      } />
         <Route path="/feed" element={
           <ProtectedRoute><Feed /></ProtectedRoute>
+        } />
+        <Route path="/posts" element={
+          <ProtectedRoute><MyPosts /></ProtectedRoute>
         } />
         <Route path="/posts/new" element={
           <ProtectedRoute><Posts /></ProtectedRoute>
@@ -41,7 +49,7 @@ function App() {
           <ProtectedRoute><Chat /></ProtectedRoute>
         } />
 
-        {/* Admin routes — AdminRoute (redirect non-admin → /feed) */}
+        {/* Admin routes */}
         <Route path="/admin/users" element={
           <AdminRoute><AdminUsers /></AdminRoute>
         } />

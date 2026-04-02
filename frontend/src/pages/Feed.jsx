@@ -156,7 +156,7 @@ export default function Feed() {
     <PhoneFrame>
       <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none]">
         {/* Full background layer */}
-        <div className="min-h-screen w-full bg-[#0f1c3f]">
+        <div className="w-full px0 py-0 bg-gradient-to-br from-[#1a3575] via-[#1a2d6b] to-[#162860] min-h-full pb-24">
           {/* Drawer */}
           {drawerOpen && (
             <>

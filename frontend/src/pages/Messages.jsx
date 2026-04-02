@@ -50,7 +50,7 @@ export default function Messages() {
   return (
     <PhoneFrame>
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <div className="w-full max-w-[390px] min-h-screen bg-[#0f1c3f] pb-24">
+          <div className="w-full px-4 py-5 bg-gradient-to-br ]">
 
             {/* Header */}
             <div className="px-5 pt-14 pb-4">
