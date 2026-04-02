@@ -75,16 +75,12 @@ export default function MyPosts() {
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
         {/* Header */}
-        <div className="sticky top-0 z-50 bg-[#0f1c3f] px-4 py-4 flex items-center gap-3 border-b border-white/[0.06]">
+        <div className="sticky top-0 z-50 bg-[#0f1c3f] px-4 py-6 flex items-center gap-3 border-b border-white/[0.06]">
           <button onClick={() => navigate(-1)}
             className="w-9 h-9 rounded-full bg-white/10 border-0 text-white text-lg cursor-pointer flex items-center justify-center hover:bg-white/15 transition-colors">
             ←
           </button>
           <h1 className="text-white text-lg font-black flex-1">My Posts</h1>
-          <button onClick={() => navigate("/posts/new")}
-            className="bg-[#4a7fe0] border-0 rounded-full px-4 py-2 text-white text-sm font-extrabold cursor-pointer hover:bg-[#5a8ff0] transition-colors">
-            + New
-          </button>
         </div>
 
         {/* Stats bar */}

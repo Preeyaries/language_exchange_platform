@@ -316,7 +316,7 @@ export default function Feed() {
             </div>
 
             {/* Feed content */}
-            <div className="min-h-full w-full bg-gradient-to-br from-[#1a3575] via-[#1a2d6b] to-[#162860] px-5 py-10">
+            <div className="min-h-full w-full bg-gradient-to-br from-[#1a3575] via-[#1a2d6b] to-[#162860] px-4 py-6">
               {/* Tabs */}
               <div className="flex border-b border-white/[0.07] px-4 pt-3">
                 {[

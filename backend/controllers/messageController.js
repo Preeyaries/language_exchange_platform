@@ -1,40 +1,45 @@
-// controllers/messageController.js
-const Message = require("../models/Message");
-const User    = require("../models/User");
+const Message  = require("../models/Message");
+const User     = require("../models/User");
+const mongoose = require("mongoose");
 
-// GET /api/messages/conversations  — list all conversations for current user
+// GET /api/messages/conversations
 exports.getConversations = async (req, res) => {
   try {
-    const myId = req.user.id;
+    const myId = new mongoose.Types.ObjectId(req.user.id);
 
-    // Get latest message per conversation partner
     const messages = await Message.aggregate([
-      { $match: {
-        $or: [{ sender: myId }, { receiver: myId }],
-        isDeleted: { $ne: true },
-      }},
-      { $sort: { createdAt: -1 } },
-      { $group: {
-        _id: {
-          $cond: [{ $eq: ["$sender", { $toObjectId: myId }] }, "$receiver", "$sender"]
+      {
+        $match: {
+          $or: [{ sender: myId }, { receiver: myId }],
+          isDeleted: { $ne: true },
         },
-        lastMessage: { $first: "$$ROOT" },
-        unreadCount: {
-          $sum: {
-            $cond: [
-              { $and: [
-                { $eq: ["$receiver", { $toObjectId: myId }] },
-                { $eq: ["$read", false] }
-              ]},
-              1, 0
-            ]
-          }
-        }
-      }},
+      },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: {
+            $cond: [{ $eq: ["$sender", myId] }, "$receiver", "$sender"],
+          },
+          lastMessage: { $first: "$$ROOT" },
+          unreadCount: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$receiver", myId] },
+                    { $eq: ["$read", false] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
       { $sort: { "lastMessage.createdAt": -1 } },
     ]);
 
-    // Populate other user info
     const populated = await Promise.all(
       messages.map(async (conv) => {
         const otherUser = await User.findById(conv._id).select("name email");
@@ -43,7 +48,7 @@ exports.getConversations = async (req, res) => {
           otherUser,
           lastMessage: conv.lastMessage,
           unreadCount: conv.unreadCount,
-          isOnline: false, // can extend with socket.io later
+          isOnline: false,
         };
       })
     );
@@ -54,11 +59,11 @@ exports.getConversations = async (req, res) => {
   }
 };
 
-// GET /api/messages/:userId  — get messages between me and userId
+// GET /api/messages/:userId
 exports.getMessages = async (req, res) => {
   try {
-    const myId     = req.user.id;
-    const otherId  = req.params.userId;
+    const myId    = req.user.id;
+    const otherId = req.params.userId;
 
     const messages = await Message.find({
       $or: [
@@ -68,7 +73,6 @@ exports.getMessages = async (req, res) => {
       isDeleted: { $ne: true },
     }).sort({ createdAt: 1 });
 
-    // Mark received messages as read
     await Message.updateMany(
       { sender: otherId, receiver: myId, read: false },
       { $set: { read: true } }
@@ -80,7 +84,7 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-// POST /api/messages/:userId  — send message to userId
+// POST /api/messages/:userId
 exports.sendMessage = async (req, res) => {
   try {
     const myId    = req.user.id;
@@ -106,7 +110,7 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-// DELETE /api/messages/:messageId  — soft delete a message
+// DELETE /api/messages/:messageId
 exports.deleteMessage = async (req, res) => {
   try {
     const message = await Message.findOneAndUpdate(
