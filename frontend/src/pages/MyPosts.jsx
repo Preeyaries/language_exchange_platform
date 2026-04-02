@@ -23,6 +23,9 @@ function timeAgo(date) {
 
 export default function MyPosts() {
   const navigate  = useNavigate();
+  const me = JSON.parse(localStorage.getItem("user") || "{}");
+  console.log("me object:", me);
+
   const [posts, setPosts]           = useState([]);
   const [loading, setLoading]       = useState(true);
   const [likedPosts, setLikedPosts] = useState(new Set());
@@ -31,7 +34,6 @@ export default function MyPosts() {
   const [editText, setEditText]     = useState("");
   const [editLoading, setEditLoading] = useState(false);
 
-  const me      = JSON.parse(localStorage.getItem("user") || "{}");
   const profile = JSON.parse(localStorage.getItem("profile") || "{}");
 
   useEffect(() => { fetchPosts(); }, []);
@@ -39,11 +41,11 @@ export default function MyPosts() {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const res = await API.get(`/posts/user/${me?.id}`);
+      const res = await API.get(`/posts/user/${me?.id || me?._id}`);
       setPosts(res.data || []);
     } catch { setPosts([]); }
     finally { setLoading(false); }
-  };
+  }
 
   const toggleLike = (postId) => setLikedPosts(prev => {
     const n = new Set(prev); n.has(postId) ? n.delete(postId) : n.add(postId); return n;
@@ -87,7 +89,7 @@ export default function MyPosts() {
 
         {/* Stats bar */}
         {posts.length > 0 && (
-          <div className="flex justify-between px-4 py-3 border-b border-white/[0.06]">
+          <div className="flex justify-between px-6 py-3 border-b border-white/[0.06]">
             <span className="text-white/45 text-xs font-bold">{posts.length} Posts</span>
             <span className="text-white/45 text-xs font-bold">
               {posts.reduce((s,p) => s+(p.likes||0), 0)} Likes &nbsp;
@@ -112,7 +114,7 @@ export default function MyPosts() {
             </button>
           </div>
         ) : posts.map(post => (
-          <div key={post._id} className="px-4 pt-4 border-b border-white/[0.07] relative">
+          <div key={post._id} className="px-8 pt-4 border-b border-white/[0.07] relative">
 
             {/* Author row */}
             <div className="flex items-start gap-2.5 mb-2.5">
