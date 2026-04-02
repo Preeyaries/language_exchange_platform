@@ -27,12 +27,12 @@ function App() {
         <Route path="/profile" element={
           <ProtectedRoute><Profile /></ProtectedRoute>
         } />
+        <Route path="/profile/edit" element={
+          <ProtectedRoute><EditProfile /></ProtectedRoute>
+        } />
         <Route path="/profile/:id" element={
           <ProtectedRoute><Profile /></ProtectedRoute>
         } />
-        <Route path="/profile/edit" element={
-        <ProtectedRoute><EditProfile /></ProtectedRoute>
-      } />
         <Route path="/feed" element={
           <ProtectedRoute><Feed /></ProtectedRoute>
         } />
