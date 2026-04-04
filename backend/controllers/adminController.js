@@ -1,5 +1,4 @@
 const User = require("../models/User");
-const Report = require("../models/Report");
 const Post = require("../models/Post");
 const Profile = require("../models/Profile");
 
@@ -43,43 +42,6 @@ exports.unsuspendUser = async (req, res) => {
     }
 
     return res.json(user);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
-
-exports.getAllReports = async (req, res) => {
-  try {
-    const reports = await Report.find()
-      .populate("reporter", "name email")
-      .populate("reportedUser", "name email")
-      .populate("reportedPost")
-      .sort({ createdAt: -1 });
-
-    return res.json(reports);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
-
-exports.reviewReport = async (req, res) => {
-  try {
-    const report = await Report.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: {
-          status: req.body.status,
-          adminNote: req.body.adminNote || "",
-        },
-      },
-      { new: true, runValidators: true }
-    );
-
-    if (!report) {
-      return res.status(404).json({ message: "Report not found" });
-    }
-
-    return res.json(report);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
