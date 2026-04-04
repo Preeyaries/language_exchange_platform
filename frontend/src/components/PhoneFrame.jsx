@@ -9,7 +9,7 @@ export default function PhoneFrame({ children, light = false }) {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: "#060d1f",
+        background: "#ffffff",
       }}
     >
       <style>{`
@@ -24,7 +24,6 @@ export default function PhoneFrame({ children, light = false }) {
           maxWidth: "390px",
           height: "100dvh",
           maxHeight: "844px",
-          // ข้างใน frame — gradient เหมือน Login card
           background: light
             ? "#e8eef8"
             : "linear-gradient(135deg, #1a3575 0%, #1a2d6b 60%, #162860 100%)",
