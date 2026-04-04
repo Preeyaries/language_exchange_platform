@@ -275,7 +275,7 @@ export default function Feed() {
                       fontWeight="800"
                       fontFamily="Nunito"
                     >
-                      A
+
                     </text>
                     <rect
                       x="19"

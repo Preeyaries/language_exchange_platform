@@ -1,6 +1,6 @@
 # .github/workflows/ci.yml
 name: CI
-
+ 
 on:
   push:
     branches:
@@ -8,55 +8,71 @@ on:
   pull_request:
     branches:
       - main
-
+ 
 jobs:
   build:
+    name: Build & Test
     runs-on: ubuntu-latest
-
+ 
     env:
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       NODE_ENV: test
-
+ 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-
+        uses: actions/checkout@v4
+ 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Install dependencies
-        working-directory: ./backend
-        run: npm install
-
-      - name: Run tests
-        working-directory: ./backend
-        run: npm test
-
-  deploy:
-    runs-on: self-hosted
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+ 
       - name: Install backend dependencies
         working-directory: ./backend
-        run: npm install
-
+        run: npm ci
+ 
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test
+ 
+  deploy:
+    name: Deploy to Production
+    runs-on: self-hosted
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+ 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+ 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+ 
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+ 
+      - name: Write backend .env
+        run: |
+          touch ./backend/.env
+          echo "${{ secrets.PROD }}" > ./backend/.env
+ 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: yarn install
-
+        run: yarn install --frozen-lockfile
+ 
       - name: Build frontend
         working-directory: ./frontend
         run: yarn build
-
+ 
       - name: Restart backend with PM2
         run: pm2 restart bello-backend || pm2 start backend/server.js --name bello-backend
-
-      - name: Restart nginx
-        run: sudo systemctl restart nginx
+ 
+      - name: Reload nginx
+        run: sudo systemctl reload nginx
+ 
