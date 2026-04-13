@@ -6,15 +6,6 @@ A full-stack web application that connects language learners around the world. U
 > **Live API:** http://3.27.235.128
 > **GitHub:** https://github.com/Preeyaries/language_exchange_platform
 
-
-//User Account
-//Username:
-//password:
-
-//Admin Account
-//Username:
-//password:
-
 ---
 
 ## Test Accounts
