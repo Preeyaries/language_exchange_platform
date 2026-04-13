@@ -2,8 +2,8 @@
 
 A full-stack web application that connects language learners around the world. Users can create profiles, post language exchange requests, follow each other, and chat in real time.
 
-> **Live App:** http://13.54.163.145:5173
-> **Live API:** http://13.54.163.145:5000
+> **Live App:** http://3.27.235.128
+> **Live API:** http://3.27.235.128
 > **GitHub:** https://github.com/Preeyaries/language_exchange_platform
 
 
