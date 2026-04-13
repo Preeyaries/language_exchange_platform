@@ -2,7 +2,8 @@
 
 A full-stack web application that connects language learners around the world. Users can create profiles, post language exchange requests, follow each other, and chat in real time.
 
-> **Live API:** http://13.54.163.145:5000  
+> **Live App:** http://13.54.163.145:5173
+> **Live API:** http://13.54.163.145:5000
 > **GitHub:** https://github.com/Preeyaries/language_exchange_platform
 
 
@@ -13,6 +14,22 @@ A full-stack web application that connects language learners around the world. U
 //Admin Account
 //Username:
 //password:
+
+---
+
+## Test Accounts
+
+### User Account
+| Field | Value |
+|-------|-------|
+| Email | kebby.monster@gmail.com |
+| Password | Ploy250240@ |
+
+### Admin Account
+| Field | Value |
+|-------|-------|
+| Email | admin@bello.com |
+| Password | Admin1234! |
 
 ---
 
@@ -28,6 +45,11 @@ A full-stack web application that connects language learners around the world. U
 
 ---
 
+<<<<<<< HEAD
+=======
+## Tech Stack
+
+>>>>>>> f1d72f41640732fad97e6a8aa3b4f959781ba8c1
 ### Frontend
 | Technology | Version |
 |------------|---------|
@@ -62,7 +84,7 @@ A full-stack web application that connects language learners around the world. U
 language_exchange_platform/
 ├── .github/
 │   └── workflows/
-│       └── ci-cd.yml          # GitHub Actions CI/CD
+│       └── ci.yml          # GitHub Actions CI/CD
 ├── backend/
 │   ├── controllers/           # Route handlers
 │   ├── middleware/            # Auth, error handling
@@ -71,7 +93,7 @@ language_exchange_platform/
 │   ├── test/                  # Jest test files
 │   ├── app.js                 # Express app
 │   ├── server.js              # Entry point
-│   └── .env                   # Environment variables
+│   └── .env                   # Environment variables (not committed)
 └── frontend/
     ├── src/
     │   ├── api/               # Axios instance
@@ -103,14 +125,14 @@ cd backend
 npm install
 ```
 
-Create `.env` file:
+Create a `.env` file in the `backend/` directory:
 ```env
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/language_exchange
 JWT_SECRET=your_jwt_secret
 PORT=5000
 ```
 
-Start backend:
+Start the backend:
 ```bash
 npm start
 ```
@@ -218,19 +240,7 @@ jobs:
 
 ---
 
-## Screenshots
-
-> Add screenshots of your application here
-
-- Login Page
-- Register (Multi-step)
-- Feed Page
-- Profile Page
-- Admin Panel
-
----
-
 ## Developer
 
-**Preeyanan** — QUT IFN636 Software Life Cycle  
+**Preeyanan Khamfoei** — QUT IFN636 Software Life Cycle
 GitHub: [@Preeyaries](https://github.com/Preeyaries)
