@@ -23,7 +23,7 @@ export default function PhoneFrame({ children, light = false }) {
           width: "100%",
           maxWidth: "390px",
           height: "100dvh",
-          maxHeight: "100dvh",
+          maxHeight: "932px",
           background: light
             ? "#e8eef8"
             : "linear-gradient(135deg, #1a3575 0%, #1a2d6b 60%, #162860 100%)",

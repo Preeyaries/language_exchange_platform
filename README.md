@@ -35,12 +35,6 @@ A full-stack web application that connects language learners around the world. U
 - **CI/CD** — GitHub Actions pipeline with Jest tests, deployed on AWS EC2 with PM2
 
 ---
-
-<<<<<<< HEAD
-=======
-## Tech Stack
-
->>>>>>> f1d72f41640732fad97e6a8aa3b4f959781ba8c1
 ### Frontend
 | Technology | Version |
 |------------|---------|
