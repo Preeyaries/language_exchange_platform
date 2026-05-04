@@ -11,8 +11,6 @@ import BottomNav from "../components/BottomNav";
 import PhoneFrame from "../components/PhoneFrame";
 import { getAvatarUrl } from "../utils/avatarUrl";
 
-const avatarUrl = getAvatarUrl(user.profilePicture, user._id, user.gender);
-
 const LEVEL_DOTS = { A1:1, A2:2, B1:3, B2:4, C1:5, C2:5 };
 
 const LANG_FLAG = {
