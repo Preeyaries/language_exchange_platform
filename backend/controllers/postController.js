@@ -44,7 +44,16 @@ exports.getAllPosts = async (req, res) => {
       .populate("comments.author", "name email")
       .sort({ createdAt: -1 });
 
-    return res.json(posts);
+    const postsWithGender = await Promise.all(posts.map(async (post) => {
+      const p = post.toObject();
+      if (p.author?._id) {
+        const profile = await Profile.findOne({ user: p.author._id }).select("gender");
+        p.author.gender = profile?.gender || "";
+      }
+      return p;
+    }));
+
+    return res.json(postsWithGender);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

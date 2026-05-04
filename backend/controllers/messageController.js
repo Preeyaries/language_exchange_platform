@@ -1,6 +1,8 @@
 const Message  = require("../models/Message");
 const User     = require("../models/User");
+const Profile = require("../models/Profile");
 const mongoose = require("mongoose");
+
 
 // GET /api/messages/conversations
 exports.getConversations = async (req, res) => {
@@ -43,9 +45,14 @@ exports.getConversations = async (req, res) => {
     const populated = await Promise.all(
       messages.map(async (conv) => {
         const otherUser = await User.findById(conv._id).select("name email");
+        const profile = await Profile.findOne({ user: conv._id }).select("gender profilePicture");
         return {
           _id: conv._id,
-          otherUser,
+          otherUser: {
+            ...otherUser?.toObject(),
+            gender: profile?.gender || "",
+            profilePicture: profile?.profilePicture || null,
+          },
           lastMessage: conv.lastMessage,
           unreadCount: conv.unreadCount,
           isOnline: false,
