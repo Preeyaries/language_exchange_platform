@@ -175,45 +175,47 @@ export default function Profile() {
     <PhoneFrame>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-        {/* Map header */}
-        <div className="relative h-[200px] overflow-hidden bg-[#1a3575]">
+{/* Map header */}
+<div className="relative h-[200px] overflow-hidden bg-[#1a3575]" style={{ zIndex: 0 }}>
 
-          {/* Map or gradient background */}
-          {city && country ? (
-            <MapComponent city={city} country={country} />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#1a3575] via-[#2a4a8f] to-[#162860]" />
-          )}
+  {city && country ? (
+    <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+      <MapComponent city={city} country={country} />
+    </div>
+  ) : (
+    <div className="w-full h-full bg-gradient-to-br from-[#1a3575] via-[#2a4a8f] to-[#162860]" />
+  )}
 
-          {/* Dark gradient overlay at bottom — makes city/country text readable */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f1c3f]/80 via-[#0f1c3f]/20 to-transparent pointer-events-none z-[1]" />
+  {/* Gradient overlay */}
+  <div className="absolute inset-0 bg-gradient-to-t from-[#0f1c3f]/80 via-[#0f1c3f]/20 to-transparent pointer-events-none" style={{ zIndex: 10 }} />
 
-          {/* City & Country text */}
-          {city && country && (
-            <div className="absolute bottom-4 right-4 z-[2] text-right">
-              <div className="text-white text-sm font-extrabold drop-shadow-lg">{city}</div>
-              <div className="text-white/70 text-xs font-semibold">{country}</div>
-            </div>
-          )}
+  {/* City & Country */}
+  {city && country && (
+    <div className="absolute bottom-4 right-4 text-right" style={{ zIndex: 20 }}>
+      <div className="text-white text-sm font-extrabold drop-shadow-lg">{city}</div>
+      <div className="text-white/70 text-xs font-semibold">{country}</div>
+    </div>
+  )}
 
-          {/* Back button */}
-          <button onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 w-9 h-9 rounded-full bg-[rgba(15,28,63,0.8)] border-0 text-white text-lg cursor-pointer flex items-center justify-center z-[5] backdrop-blur-md">
-            ←
-          </button>
+  {/* Back button */}
+  <button onClick={() => navigate(-1)}
+    className="absolute top-4 left-4 w-9 h-9 rounded-full bg-[rgba(15,28,63,0.8)] border-0 text-white text-lg cursor-pointer flex items-center justify-center backdrop-blur-md"
+    style={{ zIndex: 20 }}>
+    ←
+  </button>
 
-          {/* Edit Profile button */}
-          {isOwn && (
-            <Link to="/profile/edit" className="z-[5] absolute top-4 right-4">
-              <button className="bg-[rgba(15,28,63,0.8)] border-0 rounded-2xl px-3.5 py-1.5 text-white/80 text-xs font-bold cursor-pointer backdrop-blur-md">
-                Edit Profile
-              </button>
-            </Link>
-          )}
-        </div>
+  {/* Edit Profile */}
+  {isOwn && (
+    <Link to="/profile/edit" style={{ zIndex: 20, position: "absolute", top: 16, right: 16 }}>
+      <button className="bg-[rgba(15,28,63,0.8)] border-0 rounded-2xl px-3.5 py-1.5 text-white/80 text-xs font-bold cursor-pointer backdrop-blur-md">
+        Edit Profile
+      </button>
+    </Link>
+  )}
+</div>
 
-        {/* Profile card */}
-        <div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] -mt-7 relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen z-[10]">
+{/* Profile card */}
+<div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] -mt-7 relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen" style={{ zIndex: 30 }}>
 
           {/* Avatar — sits on top of map */}
           <div className="flex justify-center -mt-11 mb-3 z-[20] relative">
