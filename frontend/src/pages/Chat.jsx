@@ -44,12 +44,13 @@ export default function Chat() {
     }
   }, [messages]);
 
-  const fetchOtherUser = async () => {
-    try {
-      const res = await API.get(`/profile/${otherUserId}`);
-      setOtherUser(res.data.user || res.data);
-    } catch {}
-  };
+const fetchOtherUser = async () => {
+  try {
+    const res = await API.get(`/profile/${otherUserId}`);
+    console.log("profile res:", JSON.stringify(res.data));
+    setOtherUser(res.data.user || res.data);
+  } catch {}
+};
 
   const fetchMessages = async () => {
     try {
