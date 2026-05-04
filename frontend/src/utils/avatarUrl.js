@@ -8,5 +8,6 @@ export function getAvatarUrl(profilePicture, userId, gender) {
   const index = Math.abs(
     (userId || "default").split("").reduce((a, c) => a + c.charCodeAt(0), 0)
   ) % 99 + 1;
-  return `https://randomuser.me/api/portraits/${gender === "Female" ? "women" : "men"}/${index}.jpg`;
+  const isFemale = gender?.toLowerCase() === "female";
+  return `https://randomuser.me/api/portraits/${isFemale ? "women" : "men"}/${index}.jpg`;
 }

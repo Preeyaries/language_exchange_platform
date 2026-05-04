@@ -158,7 +158,9 @@ export default function Profile() {
   const bio           = profile?.bio || "";
   const ageRange      = profile?.ageRange || "";
   const gender        = profile?.gender || "";
-
+  const userId    = user?._id || me?.id || "default";
+  const avatarUrl = getAvatarUrl(profile?.profilePicture, userId, gender);
+  
   return (
     <PhoneFrame>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">

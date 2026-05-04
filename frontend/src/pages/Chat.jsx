@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/api";
 import PhoneFrame from "../components/PhoneFrame";
+import { getAvatarUrl } from "../utils/avatarUrl";
 
 function timeLabel(date) {
   if (!date) return "";
@@ -100,9 +101,11 @@ export default function Chat() {
           className="w-9 h-9 rounded-full bg-[#4a7fe0] border-0 text-white text-lg cursor-pointer flex items-center justify-center shrink-0 hover:bg-[#5a8ff0] transition-colors">
           ←
         </button>
-        <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-[17px] font-extrabold text-white shrink-0 border-2 border-white/20 overflow-hidden">
-          {avatar ? <img src={avatar} alt="" className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
-        </div>
+        <img
+          src={getAvatarUrl(otherUser?.profilePicture, otherUserId, otherUser?.gender)}
+          alt=""
+          className="w-[42px] h-[42px] rounded-full border-2 border-white/20 object-cover shrink-0"
+        />
         <div className="flex-1 min-w-0">
           <div className="text-white text-[15px] font-extrabold truncate">{displayName}</div>
           <div className="text-white/50 text-xs font-semibold mt-0.5">{lastSeen}</div>
