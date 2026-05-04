@@ -82,12 +82,12 @@ export default function Feed() {
   const [drawerOpen, setDrawerOpen]     = useState(false);
 
   // Comment state
-  const [commentOpen, setCommentOpen]   = useState(null); // postId
-  const [commentText, setCommentText]   = useState("");
+  const [commentOpen, setCommentOpen]       = useState(null);
+  const [commentText, setCommentText]       = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
 
   // Translate state
-  const [translations, setTranslations] = useState({}); // { postId: translatedText }
+  const [translations, setTranslations] = useState({});
   const [translating, setTranslating]   = useState(new Set());
 
   const searchRef = useRef(null);
@@ -135,11 +135,9 @@ export default function Feed() {
     });
     try {
       await API.post(`/posts/${postId}/like`);
-      // Refresh post likes count from server
       const res = await API.get("/posts");
       setPosts(res.data || []);
     } catch {
-      // Revert on error
       setLikedPosts(prev => {
         const next = new Set(prev);
         alreadyLiked ? next.add(postId) : next.delete(postId);
@@ -148,7 +146,6 @@ export default function Feed() {
     }
   };
 
-  // Submit a comment
   const handleComment = async (postId) => {
     if (!commentText.trim()) return;
     setCommentLoading(true);
@@ -156,7 +153,6 @@ export default function Feed() {
       await API.post(`/posts/${postId}/comments`, { text: commentText.trim() });
       setCommentText("");
       setCommentOpen(null);
-      // Refresh posts to show new comment
       const res = await API.get("/posts");
       setPosts(res.data || []);
     } catch {}
@@ -169,14 +165,12 @@ export default function Feed() {
   //         a single function that the UI calls with just a postId and text.
   const handleTranslate = async (postId, text) => {
     if (translations[postId]) {
-      // Toggle off if already translated
       setTranslations(prev => { const n = {...prev}; delete n[postId]; return n; });
       return;
     }
     setTranslating(prev => new Set(prev).add(postId));
     try {
-      // Using MyMemory free translation API (no API key required)
-      const targetLang = "th"; // default to Thai — can be made dynamic later
+      const targetLang = "th";
       const res = await fetch(
         `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`
       );
@@ -215,7 +209,7 @@ export default function Feed() {
                     { to: "/profile", icon: "👤", label: "My Profile" },
                     { to: "/feed", icon: "🏠", label: "Home Feed" },
                     { to: "/messages", icon: "💬", label: "Messages" },
-                    { to: "/matches", icon: "🌐", label: "Find Partners" },
+                    { to: "/matches", icon: "🤝", label: "Find Partners" },
                   ].map(item => (
                     <Link key={item.to} to={item.to} onClick={() => setDrawerOpen(false)}
                       className="flex items-center gap-3.5 px-5 py-3.5 text-sm font-bold text-white/75 no-underline transition-colors hover:bg-white/5 hover:text-white">
@@ -256,6 +250,7 @@ export default function Feed() {
 
           {/* Feed content */}
           <div className="relative mx-auto w-full max-w-[390px] min-h-screen">
+
             {/* Tabs */}
             <div className="flex border-b border-white/[0.07] px-4 pt-3">
               {[{ val: "all", label: "All Posts" }, { val: "following", label: "Following" }].map(tab => (
@@ -277,6 +272,17 @@ export default function Feed() {
               ))}
             </div>
 
+            {/* Find Partners Banner */}
+            <div onClick={() => navigate("/matches")}
+              className="mx-4 my-3 bg-[#4a7fe0]/20 border border-[#4a7fe0]/30 rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[#4a7fe0]/30 transition-colors">
+              <span className="text-2xl">🤝</span>
+              <div className="flex-1">
+                <div className="text-white text-sm font-extrabold">Find Language Partners</div>
+                <div className="text-white/50 text-xs font-semibold">Match with users who speak your learning language</div>
+              </div>
+              <span className="text-white/40 text-lg">›</span>
+            </div>
+
             {/* Posts */}
             {loading ? (
               <div className="flex justify-center p-10 text-sm text-white/30">Loading posts...</div>
@@ -286,10 +292,10 @@ export default function Feed() {
                 <p>No posts found</p>
               </div>
             ) : filtered.map(post => {
-              const authorName   = post.author?.name || "User";
-              const authorHandle = "@" + (post.author?.email?.split("@")[0] || "user");
-              const authorId     = post.author?._id;
-              const isLiked      = likedPosts.has(post._id);
+              const authorName    = post.author?.name || "User";
+              const authorHandle  = "@" + (post.author?.email?.split("@")[0] || "user");
+              const authorId      = post.author?._id;
+              const isLiked       = likedPosts.has(post._id);
               const isCommentOpen = commentOpen === post._id;
               const isTranslated  = !!translations[post._id];
               const isTranslating = translating.has(post._id);
@@ -356,10 +362,9 @@ export default function Feed() {
                     ))}
                   </div>
 
-                  {/* Comment input */}
+                  {/* Comment section */}
                   {isCommentOpen && (
                     <div className="pb-3 pt-2 border-t border-white/[0.06]">
-                      {/* Existing comments */}
                       {post.comments?.length > 0 && (
                         <div className="mb-2 space-y-2">
                           {post.comments.map(c => (
@@ -375,8 +380,6 @@ export default function Feed() {
                           ))}
                         </div>
                       )}
-
-                      {/* Comment input box */}
                       <div className="flex items-center gap-2 mt-1">
                         <input value={commentText} onChange={e => setCommentText(e.target.value)}
                           onKeyDown={e => e.key === "Enter" && handleComment(post._id)}
