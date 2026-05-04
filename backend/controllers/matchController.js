@@ -19,9 +19,6 @@ exports.getMatches = async (req, res) => {
     const myNative    = myProfile.nativeLanguage;
     const myLearning  = myProfile.languagesLearning?.map(l => l.language) || [];
 
-    // Find profiles where:
-    // their native language is one I'm learning AND
-    // they are learning my native language
     const matches = await Profile.find({
       user: { $ne: req.user.id },
       nativeLanguage: { $in: myLearning },
@@ -34,6 +31,7 @@ exports.getMatches = async (req, res) => {
       _id: p.user._id,
       name: p.user.name,
       email: p.user.email,
+      gender: p.gender || "",
       nativeLanguage: p.nativeLanguage,
       languagesLearning: p.languagesLearning,
       bio: p.bio,
@@ -85,6 +83,7 @@ exports.searchUsers = async (req, res) => {
           _id: u._id,
           name: u.name,
           email: u.email,
+          gender: profile?.gender || "",
           nativeLanguage: profile?.nativeLanguage || "",
           languagesLearning: profile?.languagesLearning || [],
           bio: profile?.bio || "",
@@ -102,6 +101,7 @@ exports.searchUsers = async (req, res) => {
           _id: p.user._id,
           name: p.user.name,
           email: p.user.email,
+          gender: p.gender || "",
           nativeLanguage: p.nativeLanguage,
           languagesLearning: p.languagesLearning,
           bio: p.bio,
