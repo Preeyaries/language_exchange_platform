@@ -216,17 +216,18 @@ export default function Profile() {
 
 {/* Profile card */}
 <div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] -mt-4 relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen" style={{ zIndex: 30 }}>
-  {/* Avatar — sits on top of map */}
-  <div className="flex justify-center -mt-20 mb-3 z-[20] relative">
-    {avatar ? (
-      <img src={avatar} alt="avatar"
-        className="w-[110px] h-[110px] rounded-full border-4 border-[#1a2d6b] object-cover" />
-    ) : (
-      <div className="w-[110px] h-[110px] rounded-full border-4 border-[#1a2d6b] bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-[44px] text-white font-extrabold shadow-lg">
-        {displayName.charAt(0).toUpperCase()}
-      </div>
-    )}
-  </div>
+          {/* Avatar — sits on top of map */}
+          <div className="flex justify-center -mt-16 mb-3 z-[20] relative">
+            {avatar ? (
+              <img src={avatar} alt="avatar"
+                className="w-[110px] h-[110px] rounded-full border-4 border-[#1a2d6b] object-cover" />
+            ) : (
+              <div className="w-[110px] h-[110px] -mt-3 rounded-full border-4 border-[#1a2d6b] bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-[44px] text-white font-extrabold shadow-lg">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+
           {/* Stats + Name */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex-1 text-center">
