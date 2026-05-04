@@ -1,8 +1,17 @@
-import { useEffect, useState } from "react";
+// frontend/src/pages/Profile.jsx
+// Design Pattern: SINGLETON Pattern
+// Reason: API instance is shared across all components (Singleton).
+//         MapComponent uses OpenStreetMap via Leaflet — a public API
+//         that requires no API key.
+
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import API from "../api/api";
 import BottomNav from "../components/BottomNav";
 import PhoneFrame from "../components/PhoneFrame";
+
+// Leaflet CSS must be imported for map to render correctly
+import "leaflet/dist/leaflet.css";
 
 const LEVEL_DOTS = { A1:1, A2:2, B1:3, B2:4, C1:5, C2:5 };
 
@@ -14,6 +23,69 @@ const LANG_FLAG = {
   Vietnamese:"🇻🇳", Indonesian:"🇮🇩", Malay:"🇲🇾",
   Dutch:"🇳🇱", Swedish:"🇸🇪", Polish:"🇵🇱",
 };
+
+// Design Pattern: FACADE Pattern
+// Reason: MapComponent hides the complexity of Leaflet initialization,
+//         geocoding via Nominatim API, and map cleanup — behind a simple
+//         component that just takes city and country as props.
+function MapComponent({ city, country }) {
+  const mapRef     = useRef(null);
+  const mapInstance = useRef(null);
+
+  useEffect(() => {
+    if (!city || !country || !mapRef.current) return;
+    if (mapInstance.current) return; // already initialized
+
+    // Dynamically import Leaflet to avoid SSR issues
+    import("leaflet").then(L => {
+      // Fix default marker icon issue with webpack/vite
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+      });
+
+      // Geocode city using Nominatim (OpenStreetMap free geocoding API)
+      fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city + ", " + country)}&format=json&limit=1`)
+        .then(r => r.json())
+        .then(data => {
+          if (!data || data.length === 0) return;
+          const { lat, lon } = data[0];
+
+          if (!mapRef.current) return;
+
+          const map = L.map(mapRef.current, {
+            center: [parseFloat(lat), parseFloat(lon)],
+            zoom: 12,
+            zoomControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false,
+          });
+
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors",
+          }).addTo(map);
+
+          L.marker([parseFloat(lat), parseFloat(lon)]).addTo(map);
+
+          mapInstance.current = map;
+        })
+        .catch(() => {});
+    });
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, [city, country]);
+
+  return <div ref={mapRef} className="w-full h-full" />;
+}
 
 function LangDots({ level, green = false }) {
   const filled = LEVEL_DOTS[level] || 1;
@@ -110,13 +182,13 @@ export default function Profile() {
     <PhoneFrame>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-        {/* Map header */}
+        {/* Map header — Leaflet map if city/country exists, fallback gradient */}
         <div className="relative h-[200px] overflow-hidden bg-[#1a3575]">
           {city && country ? (
             <>
-              <img src="/map-placeholder.png" alt="map" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1c3f] via-[#0f1c3f]/40 to-transparent" />
-              <div className="absolute bottom-12 right-4 text-white text-sm font-bold">{country}</div>
+              <MapComponent city={city} country={country} />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1c3f]/60 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-12 right-4 text-white text-sm font-bold drop-shadow">{city}, {country}</div>
             </>
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[#1a3575] via-[#2a4a8f] to-[#162860] flex items-center justify-center">
