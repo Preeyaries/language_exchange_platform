@@ -10,7 +10,6 @@ import API from "../api/api";
 import BottomNav from "../components/BottomNav";
 import PhoneFrame from "../components/PhoneFrame";
 
-
 const LEVEL_DOTS = { A1:1, A2:2, B1:3, B2:4, C1:5, C2:5 };
 
 const LANG_FLAG = {
@@ -27,47 +26,43 @@ const LANG_FLAG = {
 //         geocoding via Nominatim API, and map cleanup — behind a simple
 //         component that just takes city and country as props.
 function MapComponent({ city, country }) {
-  const mapRef     = useRef(null);
+  const mapRef      = useRef(null);
   const mapInstance = useRef(null);
 
   useEffect(() => {
     if (!city || !country || !mapRef.current) return;
-    if (mapInstance.current) return; // already initialized
+    if (mapInstance.current) return;
 
-    // Dynamically import Leaflet to avoid SSR issues
     import("leaflet").then(L => {
-      // Fix default marker icon issue with webpack/vite
-      delete L.Icon.Default.prototype._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-      });
+      // Try city first, fallback to country only
+      const tryGeocode = (query) => {
+        return fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`)
+          .then(r => r.json());
+      };
 
-      // Geocode city using Nominatim (OpenStreetMap free geocoding API)
-      fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city + ", " + country)}&format=json&limit=1`)
-        .then(r => r.json())
+      tryGeocode(`${city}, ${country}`)
         .then(data => {
-          if (!data || data.length === 0) return;
-          const { lat, lon } = data[0];
+          if (!data || data.length === 0) return tryGeocode(country);
+          return data;
+        })
+        .then(data => {
+          if (!data || data.length === 0 || !mapRef.current) return;
 
-          if (!mapRef.current) return;
+          const { lat, lon } = data[0];
 
           const map = L.map(mapRef.current, {
             center: [parseFloat(lat), parseFloat(lon)],
-            zoom: 12,
+            zoom: 11,
             zoomControl: false,
             dragging: false,
             scrollWheelZoom: false,
             doubleClickZoom: false,
             touchZoom: false,
+            attributionControl: false, // hide "© OpenStreetMap" text
           });
 
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap contributors",
-          }).addTo(map);
-
-          L.marker([parseFloat(lat), parseFloat(lon)]).addTo(map);
+          // Use a lighter map style
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
           mapInstance.current = map;
         })
@@ -82,7 +77,7 @@ function MapComponent({ city, country }) {
     };
   }, [city, country]);
 
-  return <div ref={mapRef} className="w-full h-full" />;
+  return <div ref={mapRef} style={{ width: "100%", height: "200px" }} />;
 }
 
 function LangDots({ level, green = false }) {
@@ -180,28 +175,37 @@ export default function Profile() {
     <PhoneFrame>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-        {/* Map header — Leaflet map if city/country exists, fallback gradient */}
+        {/* Map header */}
         <div className="relative h-[200px] overflow-hidden bg-[#1a3575]">
+
+          {/* Map or gradient background */}
           {city && country ? (
-            <>
-              <MapComponent city={city} country={country} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1c3f]/60 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-12 right-4 text-white text-sm font-bold drop-shadow">{city}, {country}</div>
-            </>
+            <MapComponent city={city} country={country} />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#1a3575] via-[#2a4a8f] to-[#162860] flex items-center justify-center">
-              <span className="text-5xl opacity-20">🗺️</span>
+            <div className="w-full h-full bg-gradient-to-br from-[#1a3575] via-[#2a4a8f] to-[#162860]" />
+          )}
+
+          {/* Dark gradient overlay at bottom — makes city/country text readable */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0f1c3f]/80 via-[#0f1c3f]/20 to-transparent pointer-events-none z-[1]" />
+
+          {/* City & Country text */}
+          {city && country && (
+            <div className="absolute bottom-4 right-4 z-[2] text-right">
+              <div className="text-white text-sm font-extrabold drop-shadow-lg">{city}</div>
+              <div className="text-white/70 text-xs font-semibold">{country}</div>
             </div>
           )}
 
+          {/* Back button */}
           <button onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 w-9 h-9 rounded-full bg-[rgba(15,28,63,0.8)] border-0 text-white text-lg cursor-pointer flex items-center justify-center z-20 backdrop-blur-md">
+            className="absolute top-4 left-4 w-9 h-9 rounded-full bg-[rgba(15,28,63,0.8)] border-0 text-white text-lg cursor-pointer flex items-center justify-center z-[5] backdrop-blur-md">
             ←
           </button>
 
+          {/* Edit Profile button */}
           {isOwn && (
-            <Link to="/profile/edit">
-              <button className="absolute top-4 right-4 bg-[rgba(15,28,63,0.8)] border-0 rounded-2xl px-3.5 py-1.5 text-white/80 text-xs font-bold cursor-pointer z-20 backdrop-blur-md">
+            <Link to="/profile/edit" className="z-[5] absolute top-4 right-4">
+              <button className="bg-[rgba(15,28,63,0.8)] border-0 rounded-2xl px-3.5 py-1.5 text-white/80 text-xs font-bold cursor-pointer backdrop-blur-md">
                 Edit Profile
               </button>
             </Link>
@@ -209,10 +213,10 @@ export default function Profile() {
         </div>
 
         {/* Profile card */}
-        <div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] -mt-7 relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen">
+        <div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] -mt-7 relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen z-[10]">
 
-          {/* Avatar */}
-          <div className="flex justify-center -mt-11 mb-3">
+          {/* Avatar — sits on top of map */}
+          <div className="flex justify-center -mt-11 mb-3 z-[20] relative">
             {avatar ? (
               <img src={avatar} alt="avatar"
                 className="w-[110px] h-[110px] -mt-3 rounded-full border-4 border-[#1a2d6b] object-cover" />
