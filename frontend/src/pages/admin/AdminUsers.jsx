@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout";
 import API from "../../api/api";
-import { getAvatarUrl } from "../utils/avatarUrl";
+import { getAvatarUrl } from "../../utils/avatarUrl";
 
 const avatarUrl = getAvatarUrl(user.profilePicture, user._id, user.gender);
 
