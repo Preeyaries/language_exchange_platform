@@ -34,22 +34,15 @@ function MapComponent({ city, country }) {
     if (mapInstance.current) return;
 
     import("leaflet").then(L => {
-      // Try city first, fallback to country only
-      const tryGeocode = (query) => {
-        return fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`)
+      const tryGeocode = (query) =>
+        fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`)
           .then(r => r.json());
-      };
 
       tryGeocode(`${city}, ${country}`)
-        .then(data => {
-          if (!data || data.length === 0) return tryGeocode(country);
-          return data;
-        })
+        .then(data => (!data || data.length === 0) ? tryGeocode(country) : data)
         .then(data => {
           if (!data || data.length === 0 || !mapRef.current) return;
-
           const { lat, lon } = data[0];
-
           const map = L.map(mapRef.current, {
             center: [parseFloat(lat), parseFloat(lon)],
             zoom: 11,
@@ -58,22 +51,16 @@ function MapComponent({ city, country }) {
             scrollWheelZoom: false,
             doubleClickZoom: false,
             touchZoom: false,
-            attributionControl: false, // hide "© OpenStreetMap" text
+            attributionControl: false,
           });
-
-          // Use a lighter map style
           L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-
           mapInstance.current = map;
         })
         .catch(() => {});
     });
 
     return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
+      if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
     };
   }, [city, country]);
 
@@ -175,58 +162,62 @@ export default function Profile() {
     <PhoneFrame>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
-{/* Map header */}
-<div className="relative h-[200px] overflow-hidden bg-[#1a3575]" style={{ zIndex: 0 }}>
+        {/* ── Map header ── */}
+        <div className="relative h-[200px] overflow-hidden bg-[#1a3575]" style={{ zIndex: 0 }}>
+          {city && country ? (
+            <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+              <MapComponent city={city} country={country} />
+            </div>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#1a3575] via-[#2a4a8f] to-[#162860]" />
+          )}
 
-  {city && country ? (
-    <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-      <MapComponent city={city} country={country} />
-    </div>
-  ) : (
-    <div className="w-full h-full bg-gradient-to-br from-[#1a3575] via-[#2a4a8f] to-[#162860]" />
-  )}
+          {/* Gradient overlay — darkens bottom so text is readable */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0f1c3f]/80 via-[#0f1c3f]/10 to-transparent pointer-events-none" style={{ zIndex: 10 }} />
 
-  {/* Gradient overlay */}
-  <div className="absolute inset-0 bg-gradient-to-t from-[#0f1c3f]/80 via-[#0f1c3f]/20 to-transparent pointer-events-none" style={{ zIndex: 10 }} />
+          {/* City & Country — above gradient */}
+          {city && country && (
+            <div className="absolute bottom-5 right-4 text-right" style={{ zIndex: 20 }}>
+              <div className="text-white text-sm font-extrabold drop-shadow-lg">{city}</div>
+              <div className="text-white/70 text-xs font-semibold">{country}</div>
+            </div>
+          )}
 
-  {/* City & Country */}
-  {city && country && (
-    <div className="absolute bottom-4 right-4 text-right" style={{ zIndex: 20 }}>
-      <div className="text-white text-sm font-extrabold drop-shadow-lg">{city}</div>
-      <div className="text-white/70 text-xs font-semibold">{country}</div>
-    </div>
-  )}
+          {/* Back button */}
+          <button onClick={() => navigate(-1)}
+            className="absolute top-4 left-4 w-9 h-9 rounded-full bg-[rgba(15,28,63,0.8)] border-0 text-white text-lg cursor-pointer flex items-center justify-center backdrop-blur-md"
+            style={{ zIndex: 20 }}>
+            ←
+          </button>
 
-  {/* Back button */}
-  <button onClick={() => navigate(-1)}
-    className="absolute top-4 left-4 w-9 h-9 rounded-full bg-[rgba(15,28,63,0.8)] border-0 text-white text-lg cursor-pointer flex items-center justify-center backdrop-blur-md"
-    style={{ zIndex: 20 }}>
-    ←
-  </button>
+          {/* Edit Profile button */}
+          {isOwn && (
+            <Link to="/profile/edit" style={{ zIndex: 20, position: "absolute", top: 16, right: 16 }}>
+              <button className="bg-[rgba(15,28,63,0.8)] border-0 rounded-2xl px-3.5 py-1.5 text-white/80 text-xs font-bold cursor-pointer backdrop-blur-md">
+                Edit Profile
+              </button>
+            </Link>
+          )}
+        </div>
 
-  {/* Edit Profile */}
-  {isOwn && (
-    <Link to="/profile/edit" style={{ zIndex: 20, position: "absolute", top: 16, right: 16 }}>
-      <button className="bg-[rgba(15,28,63,0.8)] border-0 rounded-2xl px-3.5 py-1.5 text-white/80 text-xs font-bold cursor-pointer backdrop-blur-md">
-        Edit Profile
-      </button>
-    </Link>
-  )}
-</div>
+        {/* ── Avatar — sits BETWEEN map and card ── */}
+        <div className="flex justify-center relative" style={{ zIndex: 40, marginTop: "-55px" }}>
+          {avatar ? (
+            <img src={avatar} alt="avatar"
+              className="w-[110px] h-[110px] rounded-full border-4 border-[#162860] object-cover shadow-lg" />
+          ) : (
+            <div className="w-[110px] h-[110px] rounded-full border-4 border-[#162860] bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-[44px] text-white font-extrabold shadow-lg">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
 
-{/* Profile card */}
-<div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] -mt-4 relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen" style={{ zIndex: 30 }}>
-          {/* Avatar — sits on top of map */}
-          <div className="flex justify-center -mt-16 mb-3 z-[20] relative">
-            {avatar ? (
-              <img src={avatar} alt="avatar"
-                className="w-[110px] h-[110px] rounded-full border-4 border-[#1a2d6b] object-cover" />
-            ) : (
-              <div className="w-[110px] h-[110px] -mt-3 rounded-full border-4 border-[#1a2d6b] bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-[44px] text-white font-extrabold shadow-lg">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
+        {/* ── Profile card — no avatar inside ── */}
+        <div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen"
+          style={{ zIndex: 30, marginTop: "-28px" }}>
+
+          {/* Spacer for avatar overlap */}
+          <div className="h-10" />
 
           {/* Stats + Name */}
           <div className="flex items-center justify-between mb-3">
