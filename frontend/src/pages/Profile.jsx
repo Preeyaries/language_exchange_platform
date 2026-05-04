@@ -215,10 +215,9 @@ export default function Profile() {
 </div>
 
 {/* Profile card */}
-<div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] -mt-7 relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen" style={{ zIndex: 30 }}>
-
+<div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] -mt-4 relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen" style={{ zIndex: 30 }}>
           {/* Avatar — sits on top of map */}
-          <div className="flex justify-center -mt-11 mb-3 z-[20] relative">
+          <div className="flex justify-center -mt-14 mb-3 z-[20] relative">
             {avatar ? (
               <img src={avatar} alt="avatar"
                 className="w-[110px] h-[110px] -mt-3 rounded-full border-4 border-[#1a2d6b] object-cover" />
