@@ -214,10 +214,10 @@ export default function Profile() {
 
         {/* ── Profile card — no avatar inside ── */}
         <div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen"
-          style={{ zIndex: 30, marginTop: "-28px" }}>
+          style={{ zIndex: 30, marginTop: "-72px" }}>
 
           {/* Spacer for avatar overlap */}
-          <div className="h-10" />
+          <div className="h-20" />
 
           {/* Stats + Name */}
           <div className="flex items-center justify-between mb-3">
