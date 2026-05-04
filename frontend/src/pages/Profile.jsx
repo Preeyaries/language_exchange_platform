@@ -157,10 +157,11 @@ export default function Profile() {
   const bio           = profile?.bio || "";
   const ageRange      = profile?.ageRange || "";
   const gender        = profile?.gender || "";
-  const userId    = user?._id || me?.id || "default";
-  const avatarUrl = avatar || 
-  `https://api.dicebear.com/9.x/personas/svg?seed=${userId}&gender=${gender === "Female" ? "female" : "male"}`;
-
+  const userId = user?._id || me?.id || "default";
+  const avatarIndex = Math.abs(userId.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % 99 + 1;
+  const avatarUrl = avatar ||
+    `https://randomuser.me/api/portraits/${gender === "Female" ? "women" : "men"}/${avatarIndex}.jpg`;
+    
   return (
     <PhoneFrame>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -203,11 +204,11 @@ export default function Profile() {
           )}
         </div>
 
-{/* ── Avatar — sits BETWEEN map and card ── */}
-<div className="flex justify-center relative" style={{ zIndex: 40, marginTop: "-55px" }}>
-  <img src={avatarUrl} alt="avatar"
-    className="w-[110px] h-[110px] rounded-full border-4 border-[#162860] object-cover shadow-lg bg-[#1a2d6b]" />
-</div>
+        {/* ── Avatar — sits BETWEEN map and card ── */}
+        <div className="flex justify-center relative" style={{ zIndex: 40, marginTop: "-55px" }}>
+          <img src={avatarUrl} alt="avatar"
+            className="w-[110px] h-[110px] rounded-full border-4 border-[#162860] object-cover shadow-lg bg-[#1a2d6b]" />
+        </div>
 
         {/* ── Profile card — no avatar inside ── */}
         <div className="bg-gradient-to-b from-[#1a2d6b] to-[#0f1c3f] rounded-t-[28px] relative px-8 pb-24 animate-[fadeUp_0.4s_ease_both] min-h-screen"
