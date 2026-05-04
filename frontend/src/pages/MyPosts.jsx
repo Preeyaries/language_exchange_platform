@@ -5,8 +5,6 @@ import BottomNav from "../components/BottomNav";
 import PhoneFrame from "../components/PhoneFrame";
 import { getAvatarUrl } from "../utils/avatarUrl";
 
-const avatarUrl = getAvatarUrl(user.profilePicture, user._id, user.gender);
-
 const LANG_FLAG = {
   English:"🇬🇧", Thai:"🇹🇭", Japanese:"🇯🇵", Korean:"🇰🇷",
   "Chinese (Mandarin)":"🇨🇳", French:"🇫🇷", German:"🇩🇪",

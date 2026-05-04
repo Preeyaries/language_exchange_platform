@@ -19,8 +19,6 @@ const LANG_FLAG = {
   Dutch:"🇳🇱", Swedish:"🇸🇪", Polish:"🇵🇱",
 };
 
-const avatarUrl = getAvatarUrl(user.profilePicture, user._id, user.gender);
-
 function UserCard({ user, onMessage, onProfile }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.07] hover:bg-white/[0.03] transition-colors">

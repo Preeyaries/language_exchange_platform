@@ -4,8 +4,6 @@ import API from "../api/api";
 import PhoneFrame from "../components/PhoneFrame";
 import { getAvatarUrl } from "../utils/avatarUrl";
 
-const avatarUrl = getAvatarUrl(user.profilePicture, user._id, user.gender);
-
 const LANGUAGES = [
   "English","Thai","Japanese","Korean","Chinese (Mandarin)","Chinese (Cantonese)",
   "French","German","Spanish","Italian","Portuguese","Arabic","Hindi","Russian",
