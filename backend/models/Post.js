@@ -1,4 +1,28 @@
+// backend/models/Post.js
+// Design Pattern: MODEL (MVC Pattern)
+// Reason: Post is the Model in MVC — it defines the data schema and structure,
+//         separated from business logic (Controller) and presentation (Frontend).
+//         This separation improves maintainability and testability.
+
 const mongoose = require("mongoose");
+
+// Embedded schema for comments (sub-document pattern)
+const commentSchema = new mongoose.Schema(
+  {
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    text: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 500,
+    },
+  },
+  { timestamps: true }
+);
 
 const postSchema = new mongoose.Schema(
   {
@@ -31,7 +55,7 @@ const postSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    // Topics selected when creating post (e.g. Exercise, Movie, Podcast)
+    // Topics selected when creating a post (e.g. Exercise, Movie, Podcast)
     topics: [
       {
         type: String,
@@ -42,6 +66,19 @@ const postSchema = new mongoose.Schema(
       country: String,
       city: String,
     },
+    // Like count and list of users who liked this post
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    likedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    // Embedded comments using sub-document schema
+    comments: [commentSchema],
     isDeleted: {
       type: Boolean,
       default: false,

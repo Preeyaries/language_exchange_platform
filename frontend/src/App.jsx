@@ -14,6 +14,7 @@ import AdminPosts from "./pages/admin/AdminPosts";
 import AdminTags from "./pages/admin/AdminTags";
 import AdminAddEditUser from "./pages/admin/AdminAddEditUser";
 import EditProfile from "./pages/EditProfile";
+import Matches from "./pages/Matches";
 
 function App() {
   return (
@@ -65,7 +66,9 @@ function App() {
         <Route path="/admin/users/edit/:id" element={
           <AdminRoute><AdminAddEditUser /></AdminRoute>
         } />
-
+        <Route path="/matches" element={
+          <ProtectedRoute><Matches /></ProtectedRoute>
+        } />
         {/* Fallback */}
         <Route path="*" element={<Login />} />
       </Routes>

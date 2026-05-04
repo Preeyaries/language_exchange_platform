@@ -10,6 +10,7 @@ const postRoutes    = require("./routes/postRoutes");
 const adminRoutes   = require("./routes/adminRoutes");
 const followRoutes  = require("./routes/followRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const matchRoutes = require("./routes/matchRoutes");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/posts",    postRoutes);
 app.use("/api/admin",    adminRoutes);
 app.use("/api/follow",   followRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/matches", matchRoutes);
 
 app.get("/", (req, res) => res.send("API is running"));
 
