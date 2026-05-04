@@ -150,14 +150,13 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-4 py-3 text-white/50 text-[13px] whitespace-nowrap">{timeAgo(user.updatedAt)}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => navigate(`/admin/users/edit/${user._id}`)} title="Edit"
-                        className="bg-transparent border-0 text-base cursor-pointer p-1 text-white/40 hover:text-white transition-colors">✏️</button>
-                      <button onClick={() => handleSuspend(user._id, !user.isSuspended)}
-                        title={user.isSuspended?"Unsuspend":"Suspend"}
-                        className="bg-transparent border-0 text-base cursor-pointer p-1 text-white/40 hover:text-red-400 transition-colors">
-                        {user.isSuspended ? "✅" : "🚫"}
-                      </button>
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src={getAvatarUrl(null, user._id, user.gender)}
+                        alt=""
+                        className="w-8 h-8 rounded-full object-cover shrink-0"
+                      />
+                      <span className="text-white font-extrabold text-[13px]">{user.name}</span>
                     </div>
                   </td>
                 </tr>
@@ -174,9 +173,11 @@ export default function AdminUsers() {
             <div className="text-center py-10 text-white/30 text-sm">No users found</div>
           ) : paginated.map(user => (
             <div key={user._id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-sm font-extrabold text-white shrink-0">
-                {user.name?.charAt(0).toUpperCase()}
-              </div>
+            <img
+              src={getAvatarUrl(null, user._id, user.gender)}
+              alt=""
+              className="w-10 h-10 rounded-full object-cover shrink-0"
+            />
               <div className="flex-1 min-w-0">
                 <div className="text-white font-extrabold text-sm truncate">{user.name}</div>
                 <div className="text-white/45 text-xs truncate">{user.email}</div>

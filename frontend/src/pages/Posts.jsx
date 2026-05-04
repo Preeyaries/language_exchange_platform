@@ -5,7 +5,6 @@ import BottomNav from "../components/BottomNav";
 import PhoneFrame from "../components/PhoneFrame";
 import { getAvatarUrl } from "../utils/avatarUrl";
 
-
 const LANG_FLAG = {
   English: "🇬🇧", Thai: "🇹🇭", Japanese: "🇯🇵", Korean: "🇰🇷",
   "Chinese (Mandarin)": "🇨🇳", French: "🇫🇷", German: "🇩🇪",
@@ -33,13 +32,13 @@ function LangDots({ level, color = "bg-[#4a7fe0]" }) {
 
 export default function Posts() {
   const navigate = useNavigate();
-  const [profile, setProfile]             = useState(null);
-  const [user, setUser]                   = useState(null);
-  const [text, setText]                   = useState("");
+  const [profile, setProfile]               = useState(null);
+  const [user, setUser]                     = useState(null);
+  const [text, setText]                     = useState("");
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [showAllTopics, setShowAllTopics]   = useState(false);
-  const [posting, setPosting]             = useState(false);
-  const [message, setMessage]             = useState("");
+  const [posting, setPosting]               = useState(false);
+  const [message, setMessage]               = useState("");
 
   const me = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -74,18 +73,14 @@ export default function Posts() {
 
   const displayName   = user?.name || "User";
   const handle        = "@" + (user?.email?.split("@")[0] || "user");
-  const avatar        = profile?.profilePicture || null;
   const nativeLang    = profile?.nativeLanguage || "";
   const learningLangs = profile?.languagesLearning || [];
   const visibleTopics = showAllTopics ? ALL_TOPICS : ALL_TOPICS.slice(0, 5);
 
   return (
-
     <PhoneFrame>
-        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <div className="w-full px-4 py-8 bg-gradient-to-br from-[#e8eef8] via-[#e8eef8] to-[#e8eef8] ,inset_0_1px_0_#e8eef8]">
-
-
+      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="w-full px-4 py-8 bg-[#e8eef8] min-h-full">
           <div className="w-full max-w-[390px] min-h-screen bg-[#e8eef8] relative">
 
             {/* Top bar */}
@@ -107,16 +102,11 @@ export default function Posts() {
 
               {/* User row */}
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
-                {avatar ? (
-                  <img src={avatar} alt="avatar"
-                    className="w-[52px] h-[52px] rounded-full border-[3px] border-white/20 object-cover shrink-0" />
-                ) : (
-                  <div className="w-[52px] h-[52px] rounded-full border-[3px] border-white/20 bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f]
-                    flex items-center justify-center text-xl font-extrabold text-white shrink-0">
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-
+                <img
+                  src={getAvatarUrl(profile?.profilePicture, me?.id || me?._id, me?.gender)}
+                  alt="avatar"
+                  className="w-[52px] h-[52px] rounded-full border-[3px] border-white/20 object-cover shrink-0"
+                />
                 <div className="flex-1">
                   <div className="text-white text-[15px] font-extrabold mb-0.5">{displayName}</div>
                   <div className="text-white/45 text-xs font-semibold mb-2">{handle}</div>
@@ -199,9 +189,8 @@ export default function Posts() {
             )}
 
           </div>
-          </div>
         </div>
-
+      </div>
       <BottomNav />
     </PhoneFrame>
   );

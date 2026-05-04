@@ -194,10 +194,12 @@ export default function AdminAddEditUser() {
 
       {/* Avatar */}
       <div className="flex justify-center mb-6">
-        <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f]
-          flex items-center justify-center text-4xl font-extrabold text-white border-4 border-white
-          shadow-[0_4px_16px_rgba(74,127,224,0.3)] cursor-pointer">
-          {form.name ? form.name.charAt(0).toUpperCase() : (role==="admin" ? "A" : "U")}
+        <div className="relative">
+          <img
+            src={getAvatarUrl(null, id || "new", form.gender)}
+            alt=""
+            className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-[0_4px_16px_rgba(74,127,224,0.3)]"
+          />
           <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#4a7fe0] border-2 border-white flex items-center justify-center text-xs">✏️</div>
         </div>
       </div>

@@ -152,12 +152,18 @@ export default function EditProfile() {
             className="w-9 h-9 rounded-full bg-white/10 border-0 text-white text-lg cursor-pointer flex items-center justify-center hover:bg-white/15 transition-colors">
             ←
           </button>
-          <h1 className="text-white text-lg font-black flex-1">Edit Profile</h1>
-          <button onClick={handleSave} disabled={saving}
+        {/* Avatar preview */}
+        <img
+          src={getAvatarUrl(null, JSON.parse(localStorage.getItem("user") || "{}").id, form.gender)}
+          alt=""
+          className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+        />
+        <h1 className="text-white text-lg font-black flex-1">Edit Profile</h1>
+        <button onClick={handleSave} disabled={saving}
             className="bg-[#4a7fe0] border-0 rounded-full px-5 py-2 text-white text-sm font-extrabold cursor-pointer
               hover:bg-[#5a8ff0] disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
             {saving ? "Saving..." : "Save"}
-          </button>
+        </button>
         </div>
 
         <div className="px-5 py-6 space-y-6">

@@ -93,13 +93,11 @@ export default function Messages() {
 
                       {/* Avatar */}
                       <div className="relative shrink-0">
-                        <div className="w-[54px] h-[54px] rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f]
-                          flex items-center justify-center text-xl font-extrabold text-white border-2 border-white/10 overflow-hidden">
-                          {other.profilePicture
-                            ? <img src={other.profilePicture} alt="" className="w-full h-full object-cover" />
-                            : (other.name || "U").charAt(0).toUpperCase()
-                          }
-                        </div>
+                        <img
+                          src={getAvatarUrl(other.profilePicture, other._id, other.gender)}
+                          alt=""
+                          className="w-[54px] h-[54px] rounded-full border-2 border-white/10 object-cover"
+                        />
                         {flag && (
                           <span className="absolute -bottom-0.5 -right-0.5 text-sm leading-none bg-[#0f1c3f] rounded-full p-px">
                             {flag}

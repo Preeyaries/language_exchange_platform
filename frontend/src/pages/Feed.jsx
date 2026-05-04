@@ -81,13 +81,9 @@ export default function Feed() {
   const [likedPosts, setLikedPosts]     = useState(new Set());
   const [followingIds, setFollowingIds] = useState(new Set());
   const [drawerOpen, setDrawerOpen]     = useState(false);
-
-  // Comment state
-  const [commentOpen, setCommentOpen]       = useState(null);
-  const [commentText, setCommentText]       = useState("");
+  const [commentOpen, setCommentOpen]   = useState(null);
+  const [commentText, setCommentText]   = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
-
-  // Translate state
   const [translations, setTranslations] = useState({});
   const [translating, setTranslating]   = useState(new Set());
 
@@ -125,25 +121,15 @@ export default function Feed() {
   };
 
   // Design Pattern: FACADE Pattern
-  // Reason: toggleLike hides the complexity of API call + optimistic UI update
-  //         + state management behind a single function call.
   const toggleLike = async (postId) => {
     const alreadyLiked = likedPosts.has(postId);
-    setLikedPosts(prev => {
-      const next = new Set(prev);
-      alreadyLiked ? next.delete(postId) : next.add(postId);
-      return next;
-    });
+    setLikedPosts(prev => { const next = new Set(prev); alreadyLiked ? next.delete(postId) : next.add(postId); return next; });
     try {
       await API.post(`/posts/${postId}/like`);
       const res = await API.get("/posts");
       setPosts(res.data || []);
     } catch {
-      setLikedPosts(prev => {
-        const next = new Set(prev);
-        alreadyLiked ? next.add(postId) : next.delete(postId);
-        return next;
-      });
+      setLikedPosts(prev => { const next = new Set(prev); alreadyLiked ? next.add(postId) : next.delete(postId); return next; });
     }
   };
 
@@ -152,8 +138,7 @@ export default function Feed() {
     setCommentLoading(true);
     try {
       await API.post(`/posts/${postId}/comments`, { text: commentText.trim() });
-      setCommentText("");
-      setCommentOpen(null);
+      setCommentText(""); setCommentOpen(null);
       const res = await API.get("/posts");
       setPosts(res.data || []);
     } catch {}
@@ -161,9 +146,6 @@ export default function Feed() {
   };
 
   // Design Pattern: FACADE Pattern
-  // Reason: handleTranslate hides the complexity of calling an external API
-  //         (MyMemory), parsing the response, and updating state — behind
-  //         a single function that the UI calls with just a postId and text.
   const handleTranslate = async (postId, text) => {
     if (translations[postId]) {
       setTranslations(prev => { const n = {...prev}; delete n[postId]; return n; });
@@ -171,13 +153,9 @@ export default function Feed() {
     }
     setTranslating(prev => new Set(prev).add(postId));
     try {
-      const targetLang = "th";
-      const res = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`
-      );
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|th`);
       const data = await res.json();
-      const translated = data.responseData?.translatedText || "Translation unavailable";
-      setTranslations(prev => ({ ...prev, [postId]: translated }));
+      setTranslations(prev => ({ ...prev, [postId]: data.responseData?.translatedText || "Translation unavailable" }));
     } catch {
       setTranslations(prev => ({ ...prev, [postId]: "Translation failed" }));
     } finally {
@@ -196,9 +174,12 @@ export default function Feed() {
               <div className="fixed inset-0 z-[200] bg-black/55 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
               <div className="fixed top-0 left-[calc(50%-195px)] z-[201] flex h-full w-[292px] flex-col bg-gradient-to-b from-[#1a3575] to-[#0f1c3f] shadow-2xl">
                 <div className="flex items-center gap-3 border-b border-white/10 px-5 pb-6 pt-14">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] text-xl font-extrabold text-white">
-                    {(me?.name || "U").charAt(0).toUpperCase()}
-                  </div>
+                  {/* Me avatar in drawer */}
+                  <img
+                    src={getAvatarUrl(null, me?.id || me?._id, me?.gender)}
+                    alt=""
+                    className="h-12 w-12 shrink-0 rounded-full border-2 border-white/20 object-cover"
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[15px] font-extrabold text-white">{me?.name || "User"}</div>
                     <div className="mt-0.5 text-xs font-semibold text-white/40">@{me?.email?.split("@")[0] || "user"}</div>
@@ -251,7 +232,6 @@ export default function Feed() {
 
           {/* Feed content */}
           <div className="relative mx-auto w-full max-w-[390px] min-h-screen">
-
             {/* Tabs */}
             <div className="flex border-b border-white/[0.07] px-4 pt-3">
               {[{ val: "all", label: "All Posts" }, { val: "following", label: "Following" }].map(tab => (
@@ -305,10 +285,13 @@ export default function Feed() {
                 <div key={post._id} className="border-b border-white/[0.07] px-4 pt-4">
                   {/* Author row */}
                   <div className="mb-2.5 flex items-start gap-2.5">
-                    <div onClick={() => navigate(authorId === me?.id ? "/profile" : `/profile/${authorId}`)}
-                      className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-white/15 bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] text-lg font-extrabold text-white">
-                      {authorName.charAt(0).toUpperCase()}
-                    </div>
+                    {/* Author avatar */}
+                    <img
+                      onClick={() => navigate(authorId === me?.id ? "/profile" : `/profile/${authorId}`)}
+                      src={getAvatarUrl(post.author?.profilePicture, authorId, post.author?.gender)}
+                      alt=""
+                      className="h-12 w-12 shrink-0 cursor-pointer rounded-full border-2 border-white/15 object-cover"
+                    />
                     <div className="min-w-0 flex-1">
                       <div onClick={() => navigate(authorId === me?.id ? "/profile" : `/profile/${authorId}`)}
                         className="mb-0.5 cursor-pointer text-sm font-extrabold text-white hover:underline">
@@ -370,9 +353,12 @@ export default function Feed() {
                         <div className="mb-2 space-y-2">
                           {post.comments.map(c => (
                             <div key={c._id} className="flex items-start gap-2">
-                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-xs font-extrabold text-white shrink-0">
-                                {(c.author?.name || "U").charAt(0).toUpperCase()}
-                              </div>
+                              {/* Comment author avatar */}
+                              <img
+                                src={getAvatarUrl(null, c.author?._id, c.author?.gender)}
+                                alt=""
+                                className="w-7 h-7 rounded-full object-cover shrink-0"
+                              />
                               <div className="flex-1 bg-white/8 rounded-xl px-3 py-2">
                                 <span className="text-xs font-extrabold text-white/70">{c.author?.name || "User"} </span>
                                 <span className="text-xs font-semibold text-white/65">{c.text}</span>

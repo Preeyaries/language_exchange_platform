@@ -135,9 +135,11 @@ export default function AdminPosts() {
 
           {/* Top row */}
           <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/[0.07]">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-[15px] font-extrabold text-white shrink-0">
-              {post.author?.name?.charAt(0).toUpperCase() || "U"}
-            </div>
+              <img
+                src={getAvatarUrl(null, post.author?._id, post.author?.gender)}
+                alt=""
+                className="w-10 h-10 rounded-full object-cover shrink-0"
+              />
             <div className="flex-1 min-w-0">
               <div className="text-white/85 text-[13px] font-extrabold">Post Id: {String(idx+1).padStart(5,"0")}</div>
               <div className="text-white/45 text-xs font-semibold truncate">User name: {post.author?.name || "Unknown"}</div>

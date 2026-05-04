@@ -22,14 +22,13 @@ const LANG_FLAG = {
 function UserCard({ user, onMessage, onProfile }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.07] hover:bg-white/[0.03] transition-colors">
-      {/* Avatar */}
-      <div onClick={onProfile} className="w-[52px] h-[52px] rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f]
-        flex items-center justify-center text-xl font-extrabold text-white shrink-0 border-2 border-white/15 cursor-pointer overflow-hidden">
-        {user.profilePicture
-          ? <img src={user.profilePicture} alt="" className="w-full h-full object-cover" />
-          : (user.name || "U").charAt(0).toUpperCase()
-        }
-      </div>
+        {/* Avatar */}
+        <img
+        onClick={onProfile}
+        src={getAvatarUrl(user.profilePicture, user._id, user.gender)}
+        alt=""
+        className="w-[52px] h-[52px] rounded-full border-2 border-white/15 cursor-pointer object-cover shrink-0"
+        />
 
       {/* Info */}
       <div className="flex-1 min-w-0" onClick={onProfile}>

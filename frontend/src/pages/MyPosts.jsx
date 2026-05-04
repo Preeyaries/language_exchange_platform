@@ -115,9 +115,11 @@ export default function MyPosts() {
 
             {/* Author row */}
             <div className="flex items-start gap-2.5 mb-2.5">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#4a7fe0] to-[#2a4a8f] flex items-center justify-center text-base font-extrabold text-white shrink-0 border-2 border-white/15">
-                {(me?.name || "U").charAt(0).toUpperCase()}
-              </div>
+              <img
+                src={getAvatarUrl(null, me?.id || me?._id, me?.gender)}
+                alt=""
+                className="w-11 h-11 rounded-full border-2 border-white/15 object-cover shrink-0"
+              />
               <div className="flex-1 min-w-0">
                 <div className="text-white text-sm font-extrabold mb-0.5">{me?.name || "User"}</div>
                 <div className="text-white/40 text-[11px] font-semibold">@{me?.email?.split("@")[0] || "user"}</div>
