@@ -47,8 +47,12 @@ export default function Chat() {
 const fetchOtherUser = async () => {
   try {
     const res = await API.get(`/profile/${otherUserId}`);
-    console.log("profile res:", JSON.stringify(res.data));
-    setOtherUser(res.data.user || res.data);
+    const profileData = res.data;
+    setOtherUser({
+      ...profileData.user,
+      gender: profileData.gender || "",
+      profilePicture: profileData.profilePicture || null,
+    });
   } catch {}
 };
 
