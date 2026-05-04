@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
 import API from "../../api/api";
+import { getAvatarUrl } from "../utils/avatarUrl";
+
+const avatarUrl = getAvatarUrl(user.profilePicture, user._id, user.gender);
 
 const DAYS   = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];

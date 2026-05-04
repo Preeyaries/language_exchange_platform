@@ -9,6 +9,9 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import API from "../api/api";
 import BottomNav from "../components/BottomNav";
 import PhoneFrame from "../components/PhoneFrame";
+import { getAvatarUrl } from "../utils/avatarUrl";
+
+const avatarUrl = getAvatarUrl(user.profilePicture, user._id, user.gender);
 
 const LEVEL_DOTS = { A1:1, A2:2, B1:3, B2:4, C1:5, C2:5 };
 
@@ -157,11 +160,7 @@ export default function Profile() {
   const bio           = profile?.bio || "";
   const ageRange      = profile?.ageRange || "";
   const gender        = profile?.gender || "";
-  const userId = user?._id || me?.id || "default";
-  const avatarIndex = Math.abs(userId.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % 99 + 1;
-  const avatarUrl = avatar ||
-    `https://randomuser.me/api/portraits/${gender === "Female" ? "women" : "men"}/${avatarIndex}.jpg`;
-    
+
   return (
     <PhoneFrame>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">

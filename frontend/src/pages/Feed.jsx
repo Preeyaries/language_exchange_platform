@@ -9,6 +9,9 @@ import { useNavigate, Link } from "react-router-dom";
 import API from "../api/api";
 import BottomNav from "../components/BottomNav";
 import PhoneFrame from "../components/PhoneFrame";
+import { getAvatarUrl } from "../utils/avatarUrl";
+
+const avatarUrl = getAvatarUrl(user.profilePicture, user._id, user.gender);
 
 const LANG_FLAG = {
   English: "🇬🇧", Thai: "🇹🇭", Japanese: "🇯🇵", Korean: "🇰🇷",
