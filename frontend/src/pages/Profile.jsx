@@ -10,8 +10,6 @@ import API from "../api/api";
 import BottomNav from "../components/BottomNav";
 import PhoneFrame from "../components/PhoneFrame";
 
-// Leaflet CSS must be imported for map to render correctly
-import "leaflet/dist/leaflet.css";
 
 const LEVEL_DOTS = { A1:1, A2:2, B1:3, B2:4, C1:5, C2:5 };
 
