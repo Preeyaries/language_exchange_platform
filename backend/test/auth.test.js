@@ -25,6 +25,9 @@ const testUser = {
   city: "Bangkok",
   nativeLanguage: "Thai",
   timezone: "Asia/Bangkok",
+  gender: "Male",
+  dateOfBirth: "2000-01-01",
+  learningLanguages: [{ language: "English", level: "B1" }],
 };
 
 // Stores JWT token after login, shared across test cases
@@ -35,13 +38,14 @@ describe("Auth API", () => {
   // Test Case 1: Registration
   // Sends valid user data to POST /api/auth/register
   // Expects HTTP 201 Created and a user object in the response body
-  it("should register a new user", async () => {
-    const res = await request(app)
-      .post("/api/auth/register")
-      .send(testUser);
-    expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty("user");
-  });
+it("should register a new user", async () => {
+  const res = await request(app)
+    .post("/api/auth/register")
+    .send(testUser);
+  console.log("register response:", res.body); 
+  expect(res.statusCode).toBe(201);
+  expect(res.body).toHaveProperty("user");
+});
 
   // Test Case 2: Successful Login
   // Sends correct email & password to POST /api/auth/login
