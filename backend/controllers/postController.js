@@ -17,14 +17,20 @@ exports.createPost = async (req, res) => {
       return res.status(400).json({ message: "Create profile first" });
     }
 
+    let imageUrl = req.body.imageUrl || "";
+    if (req.file) {
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        imageUrl = `${baseUrl}/uploads/posts/${req.file.filename}`;
+    }
+
     const post = await Post.create({
       author: req.user.id,
       text: req.body.text,
-      imageUrl: req.body.imageUrl || "",
+      imageUrl,
       voiceNoteUrl: req.body.voiceNoteUrl || "",
       learningLanguage: req.body.learningLanguage || profile.languagesLearning?.[0]?.language || "",
       nativeLanguage: req.body.nativeLanguage || profile.nativeLanguage || "",
-      topics: req.body.topics || [],
+      topics: req.body.topics ? JSON.parse(req.body.topics) : [],
       location: {
         country: profile.country,
         city: profile.city,

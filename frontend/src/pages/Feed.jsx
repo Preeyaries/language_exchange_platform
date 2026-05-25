@@ -106,7 +106,8 @@ export default function Feed() {
     try {
       const meRes = await API.get("/auth/me");
       setFollowingIds(new Set((meRes.data.following || []).map(String)));
-    } catch {}
+    } catch {// comment failed
+    }
   };
 
   const applyFilters = () => {
@@ -141,7 +142,8 @@ export default function Feed() {
       setCommentText(""); setCommentOpen(null);
       const res = await API.get("/posts");
       setPosts(res.data || []);
-    } catch {}
+    } catch {// comment failed
+    }
     finally { setCommentLoading(false); }
   };
 
@@ -306,6 +308,17 @@ export default function Feed() {
 
                   {/* Post text */}
                   <p className="mb-2.5 text-sm font-semibold leading-[1.55] text-white/85">{post.text}</p>
+
+                  {post.imageUrl && (
+                    <div className="mb-2.5 overflow-hidden rounded-2xl">
+                      <img
+                        src={post.imageUrl}
+                        alt="post image"
+                        className="w-full object-cover max-h-[280px]"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
 
                   {/* Translation result */}
                   {isTranslated && (

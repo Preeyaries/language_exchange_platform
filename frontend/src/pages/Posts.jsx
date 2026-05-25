@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 import BottomNav from "../components/BottomNav";
@@ -40,6 +40,10 @@ export default function Posts() {
   const [posting, setPosting]               = useState(false);
   const [message, setMessage]               = useState("");
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+
   const me = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => { fetchProfile(); }, []);
@@ -55,19 +59,45 @@ export default function Posts() {
   const toggleTopic = (t) =>
     setSelectedTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // validate 5MB max on the frontend too
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage("Image must be under 5MB.");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file)); // create a local preview URL
+    setMessage("");
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handlePost = async () => {
     if (!text.trim()) { setMessage("Please write something first."); return; }
     setPosting(true);
     try {
-      await API.post("/posts", {
-        text: text.trim(),
-        topics: selectedTopics,
-        learningLanguage: profile?.languagesLearning?.[0]?.language || "",
-        nativeLanguage: profile?.nativeLanguage || "",
-      });
-      navigate("/profile");
+        const formData = new FormData();
+        formData.append("text", text.trim());
+        formData.append("topics", JSON.stringify(selectedTopics));
+        formData.append("learningLanguage", profile?.languagesLearning?.[0]?.language || "");
+        formData.append("nativeLanguage", profile?.nativeLanguage || "");
+        if (imageFile) {
+            formData.append("image", imageFile);
+        }
+
+        await API.post("/posts", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        navigate("/profile");
     } catch (err) {
-      setMessage(err.response?.data?.message || "Post failed");
+        setMessage(err.response?.data?.message || "Post failed");
     } finally { setPosting(false); }
   };
 
@@ -151,6 +181,24 @@ export default function Posts() {
                   resize-none min-h-[140px] outline-none mb-3.5 leading-relaxed placeholder:text-[#aab4cc]"
               />
 
+              {/*image preview*/ }
+              {imagePreview && (
+                <div className="relative mb-3.5">
+                  <img
+                    src={imagePreview}
+                    alt="preview"
+                    className="w-full rounded-2xl object-cover max-h-[220px]"
+                  />
+                  <button
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 border-0
+                      text-white text-sm flex items-center justify-center cursor-pointer hover:bg-black/80"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+
               {/* Topics */}
               <div className="flex flex-wrap gap-2 mb-3.5">
                 {visibleTopics.map(t => (
@@ -173,6 +221,20 @@ export default function Posts() {
 
               {/* Media buttons */}
               <div className="flex gap-2.5 pt-3 border-t border-white/10">
+              <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-[38px] h-[38px] rounded-full bg-[#0f1c3f] border-0 text-white/70 text-base cursor-pointer
+                    flex items-center justify-center hover:bg-[#1a2d6b] transition-colors">
+                  📷
+                </button>
                 {["📷","🖼","🎙"].map((icon, i) => (
                   <button key={i}
                     className="w-[38px] h-[38px] rounded-full bg-[#0f1c3f] border-0 text-white/70 text-base cursor-pointer

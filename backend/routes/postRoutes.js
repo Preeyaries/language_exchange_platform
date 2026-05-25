@@ -8,6 +8,7 @@
 
 const express = require("express");
 const auth = require("../middleware/auth");
+const { upload } = require("../middleware/upload");
 const {
   createPost,
   getAllPosts,
@@ -30,7 +31,7 @@ router.get("/", getAllPosts);
 router.get("/my-posts",        auth, getMyPosts);
 router.get("/user/:userId",    auth, getPostsByUser);
 router.get("/:id",                  getPostById);
-router.post("/",               auth, createPost);
+router.post("/",               auth, upload.single("image"), createPost);
 router.put("/:id",             auth, updateMyPost);
 router.delete("/:id",          auth, deleteMyPost);
 

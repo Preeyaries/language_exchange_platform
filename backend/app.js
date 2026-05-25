@@ -11,6 +11,7 @@ const followRoutes  = require("./routes/followRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const matchRoutes = require("./routes/matchRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const path = require("path");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use("/api/follow",   followRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => res.send("API is running"));
 
