@@ -1,0 +1,126 @@
+/* src/styles/layout.css
+   Import this in every page:
+   import "../styles/layout.css";
+   (adjust path based on file location)
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --phone-width: 390px;
+  --bg-dark: #0f1c3f;
+  --bg-card: #1a2d6b;
+  --bg-light: #e8eef8;
+  --accent: #4a7fe0;
+  --accent-hover: #5a8ff0;
+  --text-white: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --border: rgba(255, 255, 255, 0.1);
+  --font: 'Nunito', sans-serif;
+  --radius: 14px;
+  --radius-lg: 24px;
+  --radius-xl: 36px;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-dark);
+  min-height: 100vh;
+}
+
+/* ── Phone container ── */
+.page-root {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--bg-dark);
+  font-family: var(--font);
+}
+
+.phone-container {
+  width: 100%;
+  max-width: var(--phone-width);
+  min-height: 100vh;
+  position: relative;
+  background: var(--bg-dark);
+}
+
+/* Light background variant (Chat, Posts) */
+.phone-container.light {
+  background: var(--bg-light);
+}
+
+/* ── Responsive: desktop shows phone frame ── */
+@media (min-width: 600px) {
+  .page-root {
+    background: #080f24;
+    align-items: center;
+    padding: 24px 0;
+  }
+
+  .phone-container {
+    min-height: auto;
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 2px rgba(255,255,255,0.08),
+      0 40px 80px rgba(0,0,0,0.6);
+    min-height: 844px; /* iPhone 14 Pro height */
+  }
+}
+
+/* ── Utility classes ── */
+.pb-nav { padding-bottom: 90px; } /* space for bottom nav */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--phone-width);
+  background: linear-gradient(180deg, rgba(15,28,63,0) 0%, rgba(10,20,50,0.97) 30%);
+  padding: 8px 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 8px 12px;
+  transition: color 0.2s;
+}
+
+.nav-btn:hover, .nav-btn.active { color: #fff; }
+
+.nav-plus {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(74,127,224,0.5);
+  transition: transform 0.15s;
+  margin-bottom: 4px;
+}
+
+.nav-plus:hover { transform: scale(1.08); }
