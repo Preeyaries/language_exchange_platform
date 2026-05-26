@@ -6,7 +6,6 @@
 
 const Post = require("../models/Post");
 const Profile = require("../models/Profile");
-const Notification = require("../models/Notification");
 
 // POST /api/posts — Create a new post
 exports.createPost = async (req, res) => {
@@ -19,8 +18,8 @@ exports.createPost = async (req, res) => {
 
     let imageUrl = req.body.imageUrl || "";
     if (req.file) {
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
-        imageUrl = `${baseUrl}/uploads/posts/${req.file.filename}`;
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      imageUrl = `${baseUrl}/uploads/posts/${req.file.filename}`;
     }
 
     const post = await Post.create({
@@ -30,7 +29,7 @@ exports.createPost = async (req, res) => {
       voiceNoteUrl: req.body.voiceNoteUrl || "",
       learningLanguage: req.body.learningLanguage || profile.languagesLearning?.[0]?.language || "",
       nativeLanguage: req.body.nativeLanguage || profile.nativeLanguage || "",
-      topics: req.body.topics ? JSON.parse(req.body.topics) : [],
+      topics: Array.isArray(req.body.topics) ? req.body.topics : (req.body.topics ? JSON.parse(req.body.topics) : []),
       location: {
         country: profile.country,
         city: profile.city,
@@ -187,21 +186,6 @@ exports.addComment = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
-
-  //notif for author of post being commented on
-    if (String(post.author) !== String(req.user.id)) {
-        await Notification.create({
-            recipient: post.author,
-            sender: req.user.id,
-            type: "comment",
-            post: post._id,
-        });
-    }
-
-    return res.json(post);
-} catch (error) {
-    return res.status(500).json({ message: error.message });
-}
 };
 
 // DELETE /api/posts/:id/comments/:commentId — Delete a comment (author only)
@@ -245,24 +229,12 @@ exports.toggleLike = async (req, res) => {
     const alreadyLiked = post.likedBy.map(String).includes(String(req.user.id));
 
     if (alreadyLiked) {
-      // Unlike
       post.likedBy.pull(req.user.id);
       post.likes = Math.max(0, post.likes - 1);
     } else {
-      // Like
       post.likedBy.push(req.user.id);
       post.likes += 1;
     }
-      //notif for author of post being liked
-      if (String(post.author) !== String(req.user.id)) {
-          await Notification.create({
-              recipient: post.author,
-              sender: req.user.id,
-              type: "like",
-              post: post._id,
-          });
-      }
-  }
 
     await post.save();
     return res.json({ likes: post.likes, liked: !alreadyLiked });
