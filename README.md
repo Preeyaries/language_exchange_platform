@@ -4,6 +4,8 @@ A full-stack web app that connects people who want to practise each other's lang
 
 Built as a solo project: React frontend, Express and MongoDB backend, deployed to AWS EC2 through a GitHub Actions pipeline.
 
+A feature showcase page is in [`docs/index.html`](docs/index.html). It can be served with GitHub Pages from the `docs/` folder.
+
 <!-- TODO: add 2 or 3 screenshots or a short GIF here (feed, profile, chat, admin). -->
 <!-- TODO: add the live URL here if the EC2 instance is running. -->
 
@@ -28,6 +30,10 @@ Built as a solo project: React frontend, Express and MongoDB backend, deployed t
 - The tag management screen is a UI prototype. Tags are not saved to the database yet.
 - Social sign-in buttons are part of the design but are not connected to a provider.
 - Image and voice note fields exist in the data model. There is no upload feature yet.
+
+## Design
+
+The screen designs are in Figma: [Language Exchange design file](https://www.figma.com/design/MRxutelQ8RnLTygvLTyd7t/Language-Exchange).
 
 ## Tech stack
 
@@ -166,6 +172,7 @@ The workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on e
 
 ```
 ├── .github/workflows/ci.yml
+├── docs/                    # feature showcase page (GitHub Pages)
 ├── backend/
 │   ├── app.js               # Express app (middleware and routes)
 │   ├── server.js            # connects to MongoDB and starts the server
