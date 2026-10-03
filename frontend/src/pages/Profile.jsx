@@ -211,7 +211,7 @@ export default function Profile() {
   }
 
   const displayName = user?.name || "User";
-  const handle = "@" + (user?.email?.split("@")[0] || "user");
+  const handle = "@" + (user?.handle || user?.email?.split("@")[0] || "user");
   const city = profile?.city || "";
   const country = profile?.country || "";
   const nativeLang = profile?.nativeLanguage || "";

@@ -1,240 +1,219 @@
 // backend/controllers/postController.js
 // Design Pattern: CONTROLLER (MVC Pattern)
-// Reason: This file handles all business logic for posts — sitting between
+// Reason: This file handles all business logic for posts, sitting between
 //         the Model (Post.js) and the View (Frontend React components).
 //         Each exported function maps to a specific route, keeping concerns separated.
 
 const Post = require("../models/Post");
 const Profile = require("../models/Profile");
+const { fail, pick, isHttpUrl } = require("../utils/http");
+const { publicUser } = require("../utils/publicUser");
 
-// POST /api/posts — Create a new post
+// Fields an author may set. Everything else (author, likes, likedBy,
+// comments, isDeleted) is controlled by the server.
+const POST_FIELDS = ["text", "imageUrl", "voiceNoteUrl", "learningLanguage", "nativeLanguage", "topics"];
+
+function cleanPostInput(body) {
+  const data = pick(body, POST_FIELDS);
+  if (!isHttpUrl(data.imageUrl) || !isHttpUrl(data.voiceNoteUrl)) {
+    const err = new Error("Media links must be http(s) URLs");
+    err.statusCode = 400;
+    throw err;
+  }
+  if (data.topics !== undefined) {
+    data.topics = (Array.isArray(data.topics) ? data.topics : []).map(String).slice(0, 10);
+  }
+  return data;
+}
+
+// Turn populated posts into what the client may see: authors and commenters
+// become { _id, name, handle, gender } and email addresses are dropped.
+// Genders are fetched in one query for the whole list.
+async function present(posts) {
+  const list = posts.map((p) => (typeof p.toObject === "function" ? p.toObject() : p));
+  const authorIds = [...new Set(list.map((p) => String(p.author?._id || p.author)).filter(Boolean))];
+  const profiles = await Profile.find({ user: { $in: authorIds } }).select("user gender profilePicture");
+  const byUser = new Map(profiles.map((pr) => [String(pr.user), pr]));
+
+  return list.map((p) => {
+    // Only populated authors are reshaped. An unpopulated author stays an id.
+    if (p.author && p.author.name !== undefined) {
+      p.author = publicUser(p.author, byUser.get(String(p.author._id)) || null);
+    }
+    p.comments = (p.comments || []).map((c) => ({
+      ...c,
+      author: c.author && c.author.name !== undefined ? publicUser(c.author) : c.author,
+    }));
+    return p;
+  });
+}
+
+const POPULATE = [
+  { path: "author", select: "name email" },
+  { path: "comments.author", select: "name email" },
+];
+
+// POST /api/posts
 exports.createPost = async (req, res) => {
   try {
     const profile = await Profile.findOne({ user: req.user.id });
+    if (!profile) return res.status(400).json({ message: "Create profile first" });
 
-    if (!profile) {
-      return res.status(400).json({ message: "Create profile first" });
-    }
-
+    const input = cleanPostInput(req.body);
     const post = await Post.create({
       author: req.user.id,
-      text: req.body.text,
-      imageUrl: req.body.imageUrl || "",
-      voiceNoteUrl: req.body.voiceNoteUrl || "",
-      learningLanguage: req.body.learningLanguage || profile.languagesLearning?.[0]?.language || "",
-      nativeLanguage: req.body.nativeLanguage || profile.nativeLanguage || "",
-      topics: req.body.topics || [],
-      location: {
-        country: profile.country,
-        city: profile.city,
-      },
+      text: input.text,
+      imageUrl: input.imageUrl || "",
+      voiceNoteUrl: input.voiceNoteUrl || "",
+      learningLanguage: input.learningLanguage || profile.languagesLearning?.[0]?.language || "",
+      nativeLanguage: input.nativeLanguage || profile.nativeLanguage || "",
+      topics: input.topics || [],
+      location: { country: profile.country, city: profile.city },
     });
 
     return res.status(201).json(post);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    if (error.statusCode === 400) return res.status(400).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// GET /api/posts — Get all posts (feed)
+// GET /api/posts: the feed
 exports.getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ isDeleted: false })
-      .populate("author", "name email")
-      .populate("comments.author", "name email")
-      .sort({ createdAt: -1 });
-
-    const postsWithGender = await Promise.all(posts.map(async (post) => {
-      const p = post.toObject();
-      if (p.author?._id) {
-        const profile = await Profile.findOne({ user: p.author._id }).select("gender");
-        p.author.gender = profile?.gender || "";
-      }
-      return p;
-    }));
-
-    return res.json(postsWithGender);
+    const posts = await Post.find({ isDeleted: false }).populate(POPULATE).sort({ createdAt: -1 }).limit(200);
+    return res.json(await present(posts));
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// GET /api/posts/my-posts — Get current user's posts
+// GET /api/posts/my-posts
 exports.getMyPosts = async (req, res) => {
   try {
-    const posts = await Post.find({
-      author: req.user.id,
-      isDeleted: false,
-    })
-      .populate("comments.author", "name email")
-      .sort({ createdAt: -1 });
-
-    return res.json(posts);
+    const posts = await Post.find({ author: req.user.id, isDeleted: false })
+      .populate(POPULATE[1]).sort({ createdAt: -1 });
+    return res.json(await present(posts));
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// GET /api/posts/user/:userId — Get posts by a specific user
+// GET /api/posts/user/:userId
 exports.getPostsByUser = async (req, res) => {
   try {
-    const posts = await Post.find({
-      author: req.params.userId,
-      isDeleted: false,
-    })
-      .populate("comments.author", "name email")
-      .sort({ createdAt: -1 });
-
-    return res.json(posts);
+    const posts = await Post.find({ author: req.params.userId, isDeleted: false })
+      .populate(POPULATE[1]).sort({ createdAt: -1 });
+    return res.json(await present(posts));
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// GET /api/posts/:id — Get a single post by ID
+// GET /api/posts/:id
 exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findOne({
-      _id: req.params.id,
-      isDeleted: false,
-    })
-      .populate("author", "name email")
-      .populate("comments.author", "name email");
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    return res.json(post);
+    const post = await Post.findOne({ _id: req.params.id, isDeleted: false }).populate(POPULATE);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+    return res.json((await present([post]))[0]);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// PUT /api/posts/:id — Update a post (author only)
+// PUT /api/posts/:id (author only)
 exports.updateMyPost = async (req, res) => {
   try {
     const post = await Post.findOneAndUpdate(
       { _id: req.params.id, author: req.user.id, isDeleted: false },
-      { $set: req.body },
-      { new: true, runValidators: true }
+      { $set: cleanPostInput(req.body) },
+      { returnDocument: "after", runValidators: true }
     );
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found or not yours" });
-    }
-
+    if (!post) return res.status(404).json({ message: "Post not found or not yours" });
     return res.json(post);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    if (error.statusCode === 400) return res.status(400).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// DELETE /api/posts/:id — Soft delete a post (author only)
+// DELETE /api/posts/:id: soft delete (author only)
 exports.deleteMyPost = async (req, res) => {
   try {
     const post = await Post.findOneAndUpdate(
       { _id: req.params.id, author: req.user.id, isDeleted: false },
       { $set: { isDeleted: true } },
-      { new: true }
+      { returnDocument: "after" }
     );
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found or not yours" });
-    }
-
+    if (!post) return res.status(404).json({ message: "Post not found or not yours" });
     return res.json({ message: "Post deleted successfully" });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// POST /api/posts/:id/comments — Add a comment to a post
+// POST /api/posts/:id/comments
 // Design Pattern: FACADE Pattern
-// Reason: This function hides the complexity of pushing to an embedded
-//         sub-document array and populating references behind a simple interface.
+// Reason: Hides the complexity of pushing to an embedded sub-document array
+//         and populating references behind a simple interface.
 exports.addComment = async (req, res) => {
   try {
-    if (!req.body.text?.trim()) {
-      return res.status(400).json({ message: "Comment text is required" });
-    }
+    const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+    if (!text) return res.status(400).json({ message: "Comment text is required" });
 
     const post = await Post.findOneAndUpdate(
       { _id: req.params.id, isDeleted: false },
-      {
-        $push: {
-          comments: {
-            author: req.user.id,
-            text: req.body.text.trim(),
-          },
-        },
-      },
-      { new: true }
-    ).populate("comments.author", "name email");
+      { $push: { comments: { author: req.user.id, text } } },
+      { returnDocument: "after", runValidators: true }
+    ).populate(POPULATE[1]);
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    return res.json(post);
+    return res.json((await present([post]))[0]);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// DELETE /api/posts/:id/comments/:commentId — Delete a comment (author only)
+// DELETE /api/posts/:id/comments/:commentId (comment author only)
 exports.deleteComment = async (req, res) => {
   try {
     const post = await Post.findOneAndUpdate(
       { _id: req.params.id, isDeleted: false },
-      {
-        $pull: {
-          comments: {
-            _id: req.params.commentId,
-            author: req.user.id,
-          },
-        },
-      },
-      { new: true }
-    ).populate("comments.author", "name email");
+      { $pull: { comments: { _id: req.params.commentId, author: req.user.id } } },
+      { returnDocument: "after" }
+    ).populate(POPULATE[1]);
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    return res.json(post);
+    return res.json((await present([post]))[0]);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// POST /api/posts/:id/like — Toggle like on a post
+// POST /api/posts/:id/like: toggle like
 // Design Pattern: FACADE Pattern
-// Reason: Hides the complexity of checking if the user already liked the post,
-//         then either adding or removing the like — behind a single toggle endpoint.
+// Reason: One endpoint hides the like / unlike decision. Each branch is a
+//         single atomic update, so two quick taps (or two devices) cannot
+//         count the same user twice.
 exports.toggleLike = async (req, res) => {
   try {
-    const post = await Post.findOne({ _id: req.params.id, isDeleted: false });
+    const filter = { _id: req.params.id, isDeleted: false };
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    let post = await Post.findOneAndUpdate(
+      { ...filter, likedBy: req.user.id },
+      { $pull: { likedBy: req.user.id }, $inc: { likes: -1 } },
+      { returnDocument: "after" }
+    );
+    if (post) return res.json({ likes: Math.max(0, post.likes), liked: false });
 
-    const alreadyLiked = post.likedBy.map(String).includes(String(req.user.id));
-
-    if (alreadyLiked) {
-      // Unlike
-      post.likedBy.pull(req.user.id);
-      post.likes = Math.max(0, post.likes - 1);
-    } else {
-      // Like
-      post.likedBy.push(req.user.id);
-      post.likes += 1;
-    }
-
-    await post.save();
-    return res.json({ likes: post.likes, liked: !alreadyLiked });
+    post = await Post.findOneAndUpdate(
+      { ...filter, likedBy: { $ne: req.user.id } },
+      { $addToSet: { likedBy: req.user.id }, $inc: { likes: 1 } },
+      { returnDocument: "after" }
+    );
+    if (!post) return res.status(404).json({ message: "Post not found" });
+    return res.json({ likes: post.likes, liked: true });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };

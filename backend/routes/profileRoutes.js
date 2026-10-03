@@ -1,18 +1,16 @@
-// routes/profileRoutes.js
 const express = require("express");
-const router = express.Router();
 const auth = require("../middleware/auth");
+const validateObjectId = require("../middleware/validateObjectId");
 const {
-  createProfile,
-  getMyProfile,
-  getProfileById,
-  updateMyProfile,
+  createProfile, getMyProfile, getProfileById, updateMyProfile,
 } = require("../controllers/profileController");
- 
-router.post("/", auth, createProfile);
-router.get("/", auth, getMyProfile);
-router.get("/:id", auth, getProfileById);   
-router.put("/", auth, updateMyProfile);
- 
+
+const router = express.Router();
+router.param("id", validateObjectId);
+
+router.post("/",   auth, createProfile);
+router.get("/",    auth, getMyProfile);
+router.get("/:id", auth, getProfileById);
+router.put("/",    auth, updateMyProfile);
+
 module.exports = router;
- 

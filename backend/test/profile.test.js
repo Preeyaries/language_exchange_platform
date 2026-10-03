@@ -2,12 +2,12 @@
 // Unit tests for Profile API endpoints
 
 const mongoose = require("mongoose");
-require("dotenv").config();
+const { TEST_DB_URI } = require("./setup");
 const request = require("supertest");
 const app = require("../app");
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(TEST_DB_URI);
 });
 
 afterAll(async () => {

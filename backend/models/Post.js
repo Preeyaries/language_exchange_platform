@@ -87,4 +87,8 @@ const postSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// The feed lists non-deleted posts, newest first.
+postSchema.index({ isDeleted: 1, createdAt: -1 });
+postSchema.index({ author: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Post", postSchema);

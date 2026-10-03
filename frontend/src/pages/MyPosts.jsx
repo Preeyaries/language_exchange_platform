@@ -25,7 +25,6 @@ function timeAgo(date) {
 export default function MyPosts() {
   const navigate  = useNavigate();
   const me = JSON.parse(localStorage.getItem("user") || "{}");
-  console.log("me object:", me);
 
   const [posts, setPosts]           = useState([]);
   const [loading, setLoading]       = useState(true);

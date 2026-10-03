@@ -1,12 +1,12 @@
 // backend/tests/auth.test.js
 const mongoose = require("mongoose");
-require("dotenv").config();
+const { TEST_DB_URI } = require("./setup");
 const request = require("supertest");
 const app = require("../app");
 
 // Connect to MongoDB before all tests run
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(TEST_DB_URI);
 });
 
 // Close MongoDB connection after all tests finish
@@ -42,7 +42,6 @@ it("should register a new user", async () => {
   const res = await request(app)
     .post("/api/auth/register")
     .send(testUser);
-  console.log("register response:", res.body); 
   expect(res.statusCode).toBe(201);
   expect(res.body).toHaveProperty("user");
 });

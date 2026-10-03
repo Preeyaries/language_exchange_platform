@@ -3,7 +3,6 @@ import API from "../api/api";
 import { useNavigate, Link } from "react-router-dom";
 import PhoneFrame from "../components/PhoneFrame";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 function Login() {
   const navigate = useNavigate();
@@ -29,9 +28,9 @@ function Login() {
     }
   };
 
-  const handleGoogleLogin   = () => { window.location.href = `${BACKEND_URL}/api/auth/google`; };
-  const handleFacebookLogin = () => { window.location.href = `${BACKEND_URL}/api/auth/facebook`; };
-  const handleAppleLogin    = () => { window.location.href = `${BACKEND_URL}/api/auth/apple`; };
+  const handleGoogleLogin = () => setMessage(SOCIAL_NOTE);
+  const handleFacebookLogin = () => setMessage(SOCIAL_NOTE);
+  const handleAppleLogin = () => setMessage(SOCIAL_NOTE);
 
   return (
     <PhoneFrame>

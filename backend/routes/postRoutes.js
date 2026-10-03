@@ -8,6 +8,7 @@
 
 const express = require("express");
 const auth = require("../middleware/auth");
+const validateObjectId = require("../middleware/validateObjectId");
 const {
   createPost,
   getAllPosts,
@@ -22,14 +23,18 @@ const {
 } = require("../controllers/postController");
 
 const router = express.Router();
+router.param("id", validateObjectId);
+router.param("userId", validateObjectId);
+router.param("commentId", validateObjectId);
+
 
 // Post CRUD routes
 // NOTE: Specific routes (my-posts, user/:userId) must come before /:id
 //       to prevent them being matched as an ID parameter
-router.get("/", getAllPosts);
+router.get("/",                auth, getAllPosts);
 router.get("/my-posts",        auth, getMyPosts);
 router.get("/user/:userId",    auth, getPostsByUser);
-router.get("/:id",                  getPostById);
+router.get("/:id",             auth, getPostById);
 router.post("/",               auth, createPost);
 router.put("/:id",             auth, updateMyPost);
 router.delete("/:id",          auth, deleteMyPost);

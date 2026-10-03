@@ -274,7 +274,7 @@ export default function Feed() {
               </div>
             ) : filtered.map(post => {
               const authorName    = post.author?.name || "User";
-              const authorHandle  = "@" + (post.author?.email?.split("@")[0] || "user");
+              const authorHandle  = "@" + (post.author?.handle || "user");
               const authorId      = post.author?._id;
               const isLiked       = likedPosts.has(post._id);
               const isCommentOpen = commentOpen === post._id;
