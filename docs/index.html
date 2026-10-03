@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bello! Showcase</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: the app's own night-blue look. Navy gradient surfaces, one blue
+   accent, rounded phone frames that show the real screens in miniature.
+   Single dark theme on purpose: it mirrors the product. */
+:root{
+  color-scheme: dark;
+  --night:#0f1c3f; --navy:#1a2d6b; --navy-hi:#1a3575; --navy-lo:#162860;
+  --blue:#4a7fe0; --blue-hi:#5a8ff0; --pink:#ff8fa3; --green:#7effa8;
+  --white:#fff; --text:#e8eef8; --soft:rgba(255,255,255,.66); --mute:rgba(255,255,255,.42);
+  --line:rgba(255,255,255,.10); --glass:rgba(255,255,255,.07);
+  --font:"Nunito","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--night);color:var(--text);font-family:var(--font);font-size:1.0625rem;line-height:1.6;font-weight:600}
+h1,h2,h3,h4{margin:0;font-weight:900;color:var(--white);text-wrap:balance;line-height:1.15}
+p{margin:0}
+a{color:var(--blue-hi);text-decoration:none}
+a:hover{color:var(--white)}
+:focus-visible{outline:2px solid var(--blue-hi);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1120px;margin-inline:auto;padding-inline:20px}
+.soft{color:var(--soft)}
+
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(15,28,63,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:6px 22px;flex-wrap:wrap;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.25rem;color:var(--white);margin-right:auto}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--blue);display:grid;place-items:center;font-size:.8rem;font-weight:900;color:#fff;letter-spacing:-.02em}
+.nav a.link{color:var(--soft);font-size:.95rem;font-weight:700}
+.nav a.link:hover{color:var(--white)}
+
+.btn{display:inline-block;border-radius:999px;padding:.7rem 1.4rem;font:inherit;font-weight:800;border:1px solid var(--blue);cursor:pointer;transition:background .2s,transform .2s}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 20px rgba(74,127,224,.4)}
+.btn-primary:hover{background:var(--blue-hi);color:#fff;transform:translateY(-1px)}
+.btn-ghost{background:var(--glass);border-color:var(--line);color:var(--white)}
+.btn-ghost:hover{background:rgba(255,255,255,.14)}
+
+.hero{background:linear-gradient(135deg,var(--navy-hi) 0%,var(--navy) 60%,var(--navy-lo) 100%);padding-block:56px 64px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center}
+.eyebrow{font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;color:var(--green);font-weight:800}
+.hero h1{font-size:clamp(2.3rem,5.6vw,3.9rem);margin-block:12px 16px}
+.hero h1 span{color:var(--pink)}
+.lead{font-size:1.2rem;color:var(--soft);max-width:36ch}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.facts{display:flex;flex-wrap:wrap;gap:10px 30px;margin-top:32px;padding-top:20px;border-top:1px solid var(--line)}
+.facts div{font-size:.95rem;color:var(--soft)}
+.facts b{display:block;font-size:1.7rem;font-weight:900;color:var(--white);font-variant-numeric:tabular-nums}
+
+/* phone mock */
+.phone{width:100%;max-width:300px;margin-inline:auto;border-radius:38px;overflow:hidden;position:relative;
+  background:linear-gradient(135deg,var(--navy-hi) 0%,var(--navy) 60%,var(--navy-lo) 100%);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.1),0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
+.phone .top{background:rgba(15,28,63,.75);padding:16px 14px 12px;display:flex;gap:10px;align-items:center}
+.phone .search{flex:1;border-radius:999px;background:var(--glass);border:1px solid var(--line);padding:7px 12px;font-size:.75rem;color:var(--mute)}
+.phone .tabs{display:flex;border-bottom:1px solid var(--line);font-size:.75rem;font-weight:800}
+.phone .tabs span{flex:1;text-align:center;padding:10px 0;color:var(--mute)}
+.phone .tabs .on{color:#fff;box-shadow:inset 0 -2px 0 var(--blue)}
+.phone .body{padding:12px 12px 74px;display:grid;gap:10px;min-height:330px;align-content:start}
+.pchips{display:flex;gap:6px;overflow:hidden}
+.pchip{font-size:.68rem;font-weight:800;border-radius:999px;padding:4px 10px;background:var(--glass);border:1px solid var(--line);color:var(--soft);white-space:nowrap}
+.pchip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.post{display:grid;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.who{display:flex;gap:9px;align-items:center}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:.8rem;color:#fff;flex:none;border:2px solid rgba(255,255,255,.18)}
+.who b{display:block;font-size:.82rem;color:#fff;line-height:1.2}
+.who small{font-size:.66rem;color:var(--mute)}
+.pair{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.62rem;font-weight:900;color:var(--soft)}
+.dots{display:flex;gap:2px;margin-top:2px}
+.dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2)}
+.dots i.f{background:var(--green)}
+.dots.b i.f{background:#fff}
+.post p{font-size:.8rem;color:var(--text)}
+.acts{display:flex;justify-content:space-between;font-size:.68rem;color:var(--mute);font-weight:800}
+.acts .liked{color:var(--pink)}
+.bnav{position:absolute;left:0;right:0;bottom:0;height:58px;background:linear-gradient(180deg,#1b3a8a,#16307a);display:flex;justify-content:space-around;align-items:center;padding-inline:14px}
+.bnav i{width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,.35)}
+.bnav i.on{background:#fff}
+.bnav .plus{width:52px;height:52px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;font-size:1.6rem;font-weight:400;transform:translateY(-18px);box-shadow:0 0 0 6px var(--navy-lo),0 8px 20px rgba(74,127,224,.5)}
+.bubble{max-width:78%;padding:8px 12px;border-radius:16px;font-size:.78rem}
+.bubble.them{background:var(--glass);border:1px solid var(--line);border-bottom-left-radius:4px}
+.bubble.me{background:var(--blue);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.stamp{font-size:.62rem;color:var(--mute);text-align:center}
+.caption{text-align:center;margin-top:14px;font-size:.95rem;color:var(--soft)}
+.caption b{display:block;color:#fff;font-weight:900}
+
+section{padding-block:60px}
+section.alt{background:linear-gradient(180deg,#132352,#0f1c3f)}
+.head{max-width:62ch;margin-bottom:30px}
+.head h2{font-size:clamp(1.7rem,3.8vw,2.4rem)}
+.head p{color:var(--soft);margin-top:10px}
+.kicker{display:inline-block;font-size:.75rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--blue-hi);margin-bottom:8px}
+
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:24px}
+.card h3{font-size:1.2rem;margin-bottom:6px}
+.card p{color:var(--soft)}
+ul.ticks{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+ul.ticks li{position:relative;padding-left:22px;color:var(--soft)}
+ul.ticks li::before{content:"";position:absolute;left:2px;top:.62em;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+ul.ticks b{color:#fff;font-weight:800}
+ul.ticks.todo li::before{background:transparent;border:2px solid var(--mute);top:.55em}
+
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px;align-items:start}
+.split > *{min-width:0}
+
+/* matcher */
+.matcher{background:var(--glass);border:1px solid var(--line);border-radius:24px;padding:22px}
+.pickers{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:16px}
+.pick > span{display:block;font-size:.85rem;color:var(--soft);margin-bottom:6px;font-weight:800}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{font:inherit;font-size:.85rem;font-weight:800;border-radius:999px;padding:.3rem .8rem;background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--soft);cursor:pointer}
+.opt:hover{border-color:var(--blue-hi);color:#fff}
+.opt[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.opt:disabled{opacity:.3;cursor:not-allowed}
+.rule{font-family:var(--mono);font-size:.78rem;color:var(--soft);background:rgba(0,0,0,.25);border-radius:12px;padding:10px 12px;margin-bottom:16px;overflow-x:auto;white-space:nowrap}
+.rule b{color:var(--green);font-weight:400}
+.results{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.person{display:flex;gap:12px;align-items:center;background:rgba(15,28,63,.6);border:1px solid var(--line);border-radius:16px;padding:12px}
+.person b{display:block;color:#fff;font-weight:800;line-height:1.2}
+.person small{color:var(--mute);font-size:.8rem}
+.person .langs{font-size:.78rem;color:var(--soft);margin-top:2px}
+.person .langs em{font-style:normal;color:var(--green);font-weight:800}
+.empty{color:var(--mute);padding:10px 2px}
+.count{font-size:.8rem;color:var(--mute);margin-bottom:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+
+/* architecture */
+.arch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:stretch}
+.node{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:16px;position:relative}
+.node h4{font-size:1rem;margin-bottom:4px}
+.node p{font-size:.9rem;color:var(--soft)}
+.node .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--green)}
+.node:not(:last-child)::after{content:"";position:absolute;right:-11px;top:50%;width:8px;height:8px;border-top:2px solid var(--blue-hi);border-right:2px solid var(--blue-hi);transform:translateY(-50%) rotate(45deg)}
+.pipeline{margin-top:16px;border:1px dashed rgba(255,255,255,.25);border-radius:18px;padding:16px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.pipeline b{color:#fff;margin-right:6px}
+.step{font-size:.85rem;font-weight:800;border-radius:999px;padding:.3rem .8rem;background:rgba(74,127,224,.18);border:1px solid rgba(74,127,224,.5);color:#fff}
+.arrow{color:var(--mute)}
+
+code{font-family:var(--mono);font-size:.85em;color:var(--green)}
+pre{margin:0;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:16px;padding:16px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.65;color:var(--soft);font-weight:400}
+pre .c{color:var(--mute)}
+.stack{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.stack span{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:.25rem .8rem;font-size:.85rem;color:var(--text);font-weight:800}
+a.design{display:block;background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:24px;color:#fff;transition:transform .25s,border-color .25s}
+a.design:hover{transform:translateY(-3px);border-color:var(--blue-hi);color:#fff}
+a.design h3{margin-block:6px 6px}
+a.design p{color:var(--soft)}
+a.design .go{display:inline-block;margin-top:12px;color:var(--blue-hi);font-weight:800}
+
+footer{background:#0b1530;border-top:1px solid var(--line);padding-block:28px;color:var(--soft);font-size:.95rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 30px;justify-content:space-between}
+
+@media (max-width:860px){
+  .hero .wrap,.split{grid-template-columns:minmax(0,1fr)}
+  .arch{grid-template-columns:minmax(0,1fr)}
+  .node:not(:last-child)::after{right:50%;top:auto;bottom:-11px;transform:translateX(50%) rotate(135deg)}
+  section{padding-block:44px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,a.design{transition:none}}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Sections">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="logo" aria-hidden="true">A文</span>Bello!</a>
+    <a class="link" href="#features">Features</a>
+    <a class="link" href="#matching">Matching</a>
+    <a class="link" href="#screens">Screens</a>
+    <a class="link" href="#how">How it works</a>
+    <a class="link" href="#quality">Security &amp; tests</a>
+    <a class="link" href="#design">Design</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Language exchange platform</div>
+      <h1>Learn a language from someone who is <span>learning yours</span></h1>
+      <p class="lead">Bello! pairs people whose languages mirror each other. A Thai speaker learning English meets an English speaker learning Thai. Then they post, follow and chat.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#matching">Try the matching rule</a>
+        <a class="btn btn-ghost" href="https://github.com/Preeyaries/language_exchange_platform" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <div class="facts">
+        <div><b>36</b>API endpoints</div>
+        <div><b>51</b>automated tests</div>
+        <div><b>6</b>CEFR levels, A1 to C2</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="phone" role="img" aria-label="The feed screen of the app">
+        <div class="top"><span class="logo" style="width:30px;height:30px;font-size:.7rem">A文</span><span class="search">Search</span></div>
+        <div class="tabs"><span class="on">All Posts</span><span>Following</span></div>
+        <div class="body">
+          <div class="pchips"><span class="pchip on">All</span><span class="pchip">English</span><span class="pchip">Thai</span><span class="pchip">Japanese</span></div>
+          <div class="post">
+            <div class="who">
+              <span class="av" style="background:#c0527a">E</span>
+              <span><b>Emma</b><small>@emma.w</small></span>
+              <span class="pair"><span>EN<span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span></span>⇌<span>TH<span class="dots b"><i class="f"></i><i class="f"></i><i></i><i></i><i></i></span></span></span>
+            </div>
+            <p>Today I ordered pad kra pao in Thai and the cook understood me first time!</p>
+            <div class="acts"><span class="liked">12 likes</span><span>3 comments</span><span>Translate</span></div>
+          </div>
+          <div class="post">
+            <div class="who">
+              <span class="av" style="background:#3f7d6b">S</span>
+              <span><b>Somchai</b><small>@somchai.p</small></span>
+              <span class="pair"><span>TH<span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span></span>⇌<span>EN<span class="dots b"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></span></span>
+            </div>
+            <p>Can someone explain the difference between "borrow" and "lend"?</p>
+            <div class="acts"><span>4 likes</span><span>7 comments</span><span>Translate</span></div>
+          </div>
+        </div>
+        <div class="bnav"><i class="on"></i><i></i><span class="plus">+</span><i></i><i></i></div>
+      </div>
+      <p class="caption">Example content for illustration</p>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Features</span>
+      <h2>Everything two learners need to find each other and keep talking</h2>
+    </div>
+    <div class="grid3">
+      <article class="card">
+        <h3>A profile built around languages</h3>
+        <p>Registration takes three short steps: account, personal details, then native language, the languages you are learning with a CEFR level for each, interests and a bio.</p>
+      </article>
+      <article class="card">
+        <h3>Partner matching</h3>
+        <p>The Matches screen suggests people who speak a language you are learning and who are learning your native language. You can also search by name or by language.</p>
+      </article>
+      <article class="card">
+        <h3>A feed for practice</h3>
+        <p>Write posts with topics, filter the feed by language, like and comment. English posts can be translated to Thai with one tap.</p>
+      </article>
+      <article class="card">
+        <h3>Follow and message</h3>
+        <p>Follow people you enjoy talking to. Direct messages come with a conversation list and unread counts, and the open chat refreshes every five seconds.</p>
+      </article>
+      <article class="card">
+        <h3>Profiles with a sense of place</h3>
+        <p>Each profile shows language levels as dots, interests, follower counts and a map of the person's city. Email addresses and dates of birth stay private.</p>
+      </article>
+      <article class="card">
+        <h3>Admin panel</h3>
+        <p>Administrators get a separate desktop layout to search and edit users, suspend accounts, promote admins, remove posts and review reports.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="matching">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">The core idea</span>
+      <h2>The matching rule, live</h2>
+      <p>Choose who you are. The list updates with the same rule the API uses: the partner's native language is one you are learning, and the partner is learning your native language.</p>
+    </div>
+    <div class="matcher">
+      <div class="pickers">
+        <div class="pick"><span>My native language</span><div class="opts" id="native"></div></div>
+        <div class="pick"><span>I am learning</span><div class="opts" id="learning"></div></div>
+      </div>
+      <div class="rule" id="rule"></div>
+      <div class="count" id="count" role="status"></div>
+      <div class="results" id="results"></div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Screens</span>
+      <h2>Designed for the phone first</h2>
+      <p>The learner side of the app is laid out as a phone screen with a notched bottom navigation bar. On a desktop browser it sits inside a phone frame.</p>
+    </div>
+    <div class="grid3">
+      <div>
+        <div class="phone" role="img" aria-label="Matches screen">
+          <div class="top"><span class="search">Search by name or language</span></div>
+          <div class="body">
+            <div class="post"><div class="who"><span class="av" style="background:#c0527a">E</span><span><b>Emma</b><small>Brisbane, Australia</small></span><span class="pair"><span>EN</span>⇌<span>TH</span></span></div><p>Coffee, hiking and very slow Thai.</p></div>
+            <div class="post"><div class="who"><span class="av" style="background:#5c6bc0">L</span><span><b>Lucas</b><small>Toronto, Canada</small></span><span class="pair"><span>EN</span>⇌<span>TH</span></span></div><p>Planning a year in Chiang Mai.</p></div>
+            <div class="post" style="border:0"><div class="who"><span class="av" style="background:#8d6e63">O</span><span><b>Olivia</b><small>London, UK</small></span><span class="pair"><span>EN</span>⇌<span>TH</span></span></div><p>Thai food blogger, beginner speaker.</p></div>
+          </div>
+          <div class="bnav"><i></i><i></i><span class="plus">+</span><i class="on"></i><i></i></div>
+        </div>
+        <p class="caption"><b>Matches</b>Suggested partners and search</p>
+      </div>
+      <div>
+        <div class="phone" role="img" aria-label="Chat screen">
+          <div class="top"><span class="av" style="background:#c0527a;width:30px;height:30px">E</span><b style="color:#fff;font-size:.9rem">Emma</b></div>
+          <div class="body">
+            <div class="stamp">Today</div>
+            <div class="bubble them">Sawasdee ka! Did I say that right?</div>
+            <div class="bubble me">Perfect! Now try "khop khun ka".</div>
+            <div class="bubble them">Khop khun ka. Your turn in English?</div>
+            <div class="bubble me">Thank you very much, teacher.</div>
+            <div class="bubble them">Ha! You are welcome.</div>
+          </div>
+          <div class="bnav"><i></i><i class="on"></i><span class="plus">+</span><i></i><i></i></div>
+        </div>
+        <p class="caption"><b>Chat</b>Direct messages with unread counts</p>
+      </div>
+      <div>
+        <div class="phone" role="img" aria-label="Profile screen">
+          <div class="body" style="padding-top:22px;justify-items:center;text-align:center">
+            <span class="av" style="background:#3f7d6b;width:72px;height:72px;font-size:1.5rem">S</span>
+            <div><b style="color:#fff;font-size:1rem;display:block">Somchai</b><small style="color:var(--mute);font-size:.72rem">@somchai.p • Bangkok, Thailand</small></div>
+            <div style="display:flex;gap:22px;font-size:.72rem;color:var(--soft)"><span><b style="color:#fff;display:block;font-size:.95rem">128</b>Followers</span><span><b style="color:#fff;display:block;font-size:.95rem">64</b>Following</span></div>
+            <div style="width:100%;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:8px;text-align:left;font-size:.75rem">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span>Thai <small style="color:var(--mute)">native</small></span><span class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><span>English <small style="color:var(--mute)">B1</small></span><span class="dots b"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><span>Japanese <small style="color:var(--mute)">A1</small></span><span class="dots b"><i class="f"></i><i></i><i></i><i></i><i></i></span></div>
+            </div>
+            <div class="pchips" style="flex-wrap:wrap;justify-content:center"><span class="pchip">Cooking</span><span class="pchip">Football</span><span class="pchip">Movies</span></div>
+          </div>
+          <div class="bnav"><i></i><i></i><span class="plus">+</span><i></i><i class="on"></i></div>
+        </div>
+        <p class="caption"><b>Profile</b>Language levels, interests, city map</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="how">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">How it works</span>
+      <h2>From the browser to the database</h2>
+      <p>The React app and the API are served from one address. The browser only ever calls <code>/api</code>, so no server address is stored in the code.</p>
+    </div>
+    <div class="arch">
+      <div class="node"><span class="tag">Client</span><h4>React app</h4><p>React 18, Vite, React Router, Tailwind CSS, Axios, Leaflet maps</p></div>
+      <div class="node"><span class="tag">Server</span><h4>Nginx on EC2</h4><p>Serves the built frontend and forwards <code>/api</code> to the backend</p></div>
+      <div class="node"><span class="tag">API</span><h4>Express, kept alive by PM2</h4><p>Routes, controllers and middleware for auth, admin checks and validation</p></div>
+      <div class="node"><span class="tag">Data</span><h4>MongoDB Atlas</h4><p>Users, profiles, posts with embedded comments, messages, reports</p></div>
+    </div>
+    <div class="pipeline">
+      <b>GitHub Actions</b>
+      <span class="step">Backend tests on a MongoDB container</span><span class="arrow">then</span>
+      <span class="step">Frontend build</span><span class="arrow">then, on main only</span>
+      <span class="step">Deploy on the EC2 runner</span>
+    </div>
+  </div>
+</section>
+
+<section id="quality">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <div class="head" style="margin-bottom:18px">
+          <span class="kicker">Security</span>
+          <h2>Private by default</h2>
+        </div>
+        <ul class="ticks">
+          <li><b>Passwords</b> are hashed with bcrypt and never returned by the API</li>
+          <li><b>Every request</b> re-checks the account, so a suspension applies at once</li>
+          <li><b>Email and date of birth</b> stay private. Others see a handle and an age range</li>
+          <li><b>Allowed-field lists</b> stop a client from setting fields like author or likes</li>
+          <li><b>Ownership checks</b> on posts, comments and messages</li>
+          <li><b>Rate limiting</b> on login and registration</li>
+          <li><b>Search text</b> is escaped before it reaches the database</li>
+        </ul>
+      </div>
+      <div>
+        <div class="head" style="margin-bottom:18px">
+          <span class="kicker">Tests</span>
+          <h2>51 tests on a real database</h2>
+          <p>Jest and Supertest drive the API end to end. The suite uses its own database and refuses to run against one without "test" in its name.</p>
+        </div>
+        <ul class="ticks">
+          <li>Registration, login and current user</li>
+          <li>Posts, likes and comments</li>
+          <li>Profiles, follows and messages</li>
+          <li>Matching and search</li>
+          <li>Private data, protected fields and admin-only routes</li>
+          <li>Suspended accounts and malformed input</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="next">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <div class="head" style="margin-bottom:18px">
+          <span class="kicker">Roadmap</span>
+          <h2>Not finished yet</h2>
+          <p>These parts are designed but not complete.</p>
+        </div>
+        <ul class="ticks todo">
+          <li><b>Tag management</b> is a screen prototype. Tags are not saved to the database</li>
+          <li><b>Social sign-in</b> buttons are not connected to a provider</li>
+          <li><b>Image and voice notes</b> exist in the data model, with no upload feature</li>
+          <li><b>Translation</b> covers English to Thai only</li>
+        </ul>
+      </div>
+      <div id="design">
+        <div class="head" style="margin-bottom:18px">
+          <span class="kicker">Design</span>
+          <h2>Design file</h2>
+        </div>
+        <a class="design" href="https://www.figma.com/design/MRxutelQ8RnLTygvLTyd7t/Language-Exchange" target="_blank" rel="noopener">
+          <span class="kicker" style="margin:0">Figma</span>
+          <h3>Language Exchange</h3>
+          <p>The screen designs the app was built from.</p>
+          <span class="go">Open in Figma</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="run">
+  <div class="wrap">
+    <div class="head">
+      <span class="kicker">Run it</span>
+      <h2>Run it locally</h2>
+      <div class="stack"><span>React</span><span>Vite</span><span>Tailwind CSS</span><span>Node.js</span><span>Express</span><span>MongoDB</span><span>JWT</span><span>Jest</span><span>GitHub Actions</span><span>AWS EC2</span><span>Nginx</span><span>PM2</span></div>
+    </div>
+    <div class="split">
+      <pre><span class="c"># backend</span>
+cd backend
+npm install
+cp .env.example .env   <span class="c"># set MONGODB_URI and JWT_SECRET</span>
+npm run dev            <span class="c"># http://localhost:5000</span></pre>
+      <pre><span class="c"># frontend</span>
+cd frontend
+npm install
+npm run dev            <span class="c"># http://localhost:5173</span>
+
+<span class="c"># tests</span>
+cd backend &amp;&amp; npm test</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span><b style="color:#fff">Bello!</b> by Preeyanan Khamfoei</span>
+    <span>Built for IFN636 Software Life Cycle at QUT, then cleaned up as a portfolio project.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var LANGS = ["Thai","English","Japanese","Korean","Spanish"];
+  var PEOPLE = [
+    {n:"Emma",    c:"Brisbane, Australia", nat:"English",  learn:[["Thai","A2"]],                    col:"#c0527a"},
+    {n:"Lucas",   c:"Toronto, Canada",     nat:"English",  learn:[["Thai","A1"],["Japanese","A2"]],  col:"#5c6bc0"},
+    {n:"Olivia",  c:"London, UK",          nat:"English",  learn:[["Spanish","B1"],["Korean","A1"]], col:"#8d6e63"},
+    {n:"Somchai", c:"Bangkok, Thailand",   nat:"Thai",     learn:[["English","B1"],["Japanese","A1"]], col:"#3f7d6b"},
+    {n:"Nok",     c:"Chiang Mai, Thailand",nat:"Thai",     learn:[["Japanese","A2"],["Korean","A1"]], col:"#b26a3c"},
+    {n:"Kenji",   c:"Osaka, Japan",        nat:"Japanese", learn:[["English","B1"]],                 col:"#4a7fe0"},
+    {n:"Aiko",    c:"Tokyo, Japan",        nat:"Japanese", learn:[["Thai","B1"],["Korean","A2"]],    col:"#9c5fb5"},
+    {n:"Min-jun", c:"Seoul, South Korea",  nat:"Korean",   learn:[["English","B2"],["Thai","A1"]],   col:"#2f8fa3"},
+    {n:"Sofia",   c:"Madrid, Spain",       nat:"Spanish",  learn:[["English","C1"]],                 col:"#c2504a"},
+    {n:"Mateo",   c:"Lima, Peru",          nat:"Spanish",  learn:[["Japanese","A2"],["English","B1"]], col:"#6b8e3d"}
+  ];
+  var state = { native:"Thai", learning:["English"] };
+  var nativeEl = document.getElementById("native"), learnEl = document.getElementById("learning");
+
+  function button(label, pressed, onClick){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "opt"; b.textContent = label;
+    b.setAttribute("aria-pressed", String(pressed));
+    b.addEventListener("click", onClick);
+    return b;
+  }
+  function draw(){
+    nativeEl.innerHTML = ""; learnEl.innerHTML = "";
+    LANGS.forEach(function(l){
+      nativeEl.appendChild(button(l, state.native === l, function(){
+        state.native = l;
+        state.learning = state.learning.filter(function(x){ return x !== l; });
+        draw();
+      }));
+      var b = button(l, state.learning.indexOf(l) >= 0, function(){
+        var i = state.learning.indexOf(l);
+        if (i >= 0) state.learning.splice(i, 1); else state.learning.push(l);
+        draw();
+      });
+      if (l === state.native) b.disabled = true;
+      learnEl.appendChild(b);
+    });
+
+    var rule = document.getElementById("rule");
+    rule.innerHTML = 'Profile.find({ nativeLanguage: { $in: <b></b> }, "languagesLearning.language": <b></b> })';
+    var bs = rule.querySelectorAll("b");
+    bs[0].textContent = JSON.stringify(state.learning);
+    bs[1].textContent = JSON.stringify(state.native);
+
+    var found = PEOPLE.filter(function(p){
+      return state.learning.indexOf(p.nat) >= 0 &&
+             p.learn.some(function(x){ return x[0] === state.native; });
+    });
+    var host = document.getElementById("results");
+    host.innerHTML = "";
+    found.forEach(function(p){
+      var level = p.learn.filter(function(x){ return x[0] === state.native; })[0][1];
+      var el = document.createElement("div");
+      el.className = "person";
+      el.innerHTML = '<span class="av"></span><span><b></b><small></small><span class="langs"></span></span>';
+      var av = el.querySelector(".av"); av.style.background = p.col; av.textContent = p.n[0];
+      el.querySelector("b").textContent = p.n;
+      el.querySelector("small").textContent = p.c;
+      var langs = el.querySelector(".langs");
+      langs.style.display = "block";
+      langs.innerHTML = "Speaks <em></em>, learning <em></em>";
+      var ems = langs.querySelectorAll("em");
+      ems[0].textContent = p.nat; ems[1].textContent = state.native + " " + level;
+      host.appendChild(el);
+    });
+    if (!found.length){
+      host.innerHTML = '<p class="empty"></p>';
+      host.firstChild.textContent = state.learning.length
+        ? "No partner in this sample speaks that and is learning " + state.native + "."
+        : "Choose at least one language you are learning.";
+    }
+    document.getElementById("count").textContent =
+      found.length + (found.length === 1 ? " match" : " matches") + " from 10 sample people";
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
