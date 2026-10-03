@@ -1,17 +1,17 @@
-const express    = require("express");
-const router     = express.Router();
-const auth       = require("../middleware/auth");
+const express = require("express");
+const auth = require("../middleware/auth");
+const validateObjectId = require("../middleware/validateObjectId");
 const {
-  getConversations,
-  getMessages,
-  sendMessage,
-  deleteMessage,
+  getConversations, getMessages, sendMessage, deleteMessage,
 } = require("../controllers/messageController");
- 
-router.get("/conversations",    auth, getConversations);
-router.get("/:userId",          auth, getMessages);
-router.post("/:userId",         auth, sendMessage);
-router.delete("/:messageId",    auth, deleteMessage);
- 
+
+const router = express.Router();
+router.param("userId", validateObjectId);
+router.param("messageId", validateObjectId);
+
+router.get("/conversations", auth, getConversations);
+router.get("/:userId",       auth, getMessages);
+router.post("/:userId",      auth, sendMessage);
+router.delete("/:messageId", auth, deleteMessage);
+
 module.exports = router;
- 

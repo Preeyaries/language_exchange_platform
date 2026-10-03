@@ -1,7 +1,8 @@
-// controllers/followController.js
+// backend/controllers/followController.js
 const User = require("../models/User");
+const { fail } = require("../utils/http");
 
-// POST /api/follow/:id  — follow a user
+// POST /api/follow/:id
 exports.followUser = async (req, res) => {
   try {
     const targetId = req.params.id;
@@ -10,59 +11,40 @@ exports.followUser = async (req, res) => {
     if (targetId === myId) {
       return res.status(400).json({ message: "You cannot follow yourself" });
     }
-
-    const target = await User.findById(targetId);
-    if (!target) {
+    if (!(await User.exists({ _id: targetId }))) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Add targetId to my following list (if not already)
-    await User.findByIdAndUpdate(myId, {
-      $addToSet: { following: targetId },
-    });
-
-    // Add myId to target's followers list
-    await User.findByIdAndUpdate(targetId, {
-      $addToSet: { followers: myId },
-    });
+    await User.updateOne({ _id: myId }, { $addToSet: { following: targetId } });
+    await User.updateOne({ _id: targetId }, { $addToSet: { followers: myId } });
 
     return res.json({ message: "Followed successfully" });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// DELETE /api/follow/:id  — unfollow a user
+// DELETE /api/follow/:id
 exports.unfollowUser = async (req, res) => {
   try {
     const targetId = req.params.id;
     const myId = req.user.id;
 
-    await User.findByIdAndUpdate(myId, {
-      $pull: { following: targetId },
-    });
-
-    await User.findByIdAndUpdate(targetId, {
-      $pull: { followers: myId },
-    });
+    await User.updateOne({ _id: myId }, { $pull: { following: targetId } });
+    await User.updateOne({ _id: targetId }, { $pull: { followers: myId } });
 
     return res.json({ message: "Unfollowed successfully" });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// GET /api/follow/status/:id  — check if I follow this user
+// GET /api/follow/status/:id
 exports.followStatus = async (req, res) => {
   try {
-    const targetId = req.params.id;
-    const myId = req.user.id;
-
-    const me = await User.findById(myId).select("following");
-    const isFollowing = me?.following?.map(String).includes(String(targetId)) || false;
-
+    const isFollowing = Boolean(await User.exists({ _id: req.user.id, following: req.params.id }));
     return res.json({ isFollowing });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };

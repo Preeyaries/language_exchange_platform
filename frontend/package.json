@@ -1,5 +1,5 @@
 {
-  "name": "language_exchange_platform",
+  "name": "bello-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "axios": "^1.20.0",
     "leaflet": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.4",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {

@@ -1,11 +1,15 @@
-//authController.js
+// backend/controllers/authController.js
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Profile = require("../models/Profile");
+const { fail } = require("../utils/http");
 
-// Map frontend level labels → CEFR codes
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const MIN_PASSWORD_LENGTH = 8;
+
+// Map frontend level labels to CEFR codes
 const LEVEL_MAP = {
   Beginner: "A1",
   Elementary: "A2",
@@ -14,20 +18,6 @@ const LEVEL_MAP = {
   Advanced: "C1",
   Native: "C2",
 };
-
-// Derive ageRange string from dateOfBirth
-function getAgeRange(dateOfBirth) {
-  if (!dateOfBirth) return null;
-  const age = Math.floor(
-    (Date.now() - new Date(dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000)
-  );
-  if (age < 18) return "Under 18";
-  if (age <= 24) return "18-24";
-  if (age <= 34) return "25-34";
-  if (age <= 44) return "35-44";
-  if (age <= 54) return "45-54";
-  return "55+";
-}
 
 // Best-effort timezone from country name (covers common cases)
 const COUNTRY_TIMEZONE_MAP = {
@@ -56,163 +46,137 @@ const COUNTRY_TIMEZONE_MAP = {
 
 function guessTimezone(country) {
   if (!country) return "UTC";
-  const key = country.trim().toLowerCase();
-  return COUNTRY_TIMEZONE_MAP[key] || "UTC";
+  return COUNTRY_TIMEZONE_MAP[String(country).trim().toLowerCase()] || "UTC";
 }
 
-// ─────────────────────────────────────────────
-// REGISTER — creates User + Profile atomically
-// ─────────────────────────────────────────────
+// POST /api/auth/register: creates the User and its Profile together.
+// If the profile cannot be created, the user is removed again so no
+// half-registered account is left behind.
 exports.register = async (req, res) => {
   try {
     const {
-      // Step 1 — Account
-      name,
-      email,
-      password,
-      confirmPassword,
-      // Step 2 — Personal
-      dateOfBirth,
-      gender,
-      country,
-      city,
-      timezone,
-      // Step 3 — Language & Interests
-      nativeLanguage,
-      learningLanguages = [],  // [{ language, level }]
-      interests = [],
-      bio,
-    } = req.body;
+      name, email, password, confirmPassword,
+      dateOfBirth, gender, country, city, timezone,
+      nativeLanguage, learningLanguages = [], interests = [], bio,
+    } = req.body || {};
 
-    // ── Validation ──────────────────────────────
     if (!name || !email || !password || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
     }
-
+    if (typeof email !== "string" || !EMAIL_RE.test(email) || email.length > 255) {
+      return res.status(400).json({ message: "Please enter a valid email address" });
+    }
+    if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
+      return res.status(400).json({ message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
+    }
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
     }
-
     if (!country || !city) {
       return res.status(400).json({ message: "Country and city are required" });
     }
-
     if (!nativeLanguage) {
       return res.status(400).json({ message: "Native language is required" });
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
+    const normalisedEmail = email.toLowerCase().trim();
+    if (await User.findOne({ email: normalisedEmail })) {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // ── Create User ──────────────────────────────
+    const languagesLearning = (Array.isArray(learningLanguages) ? learningLanguages : [])
+      .filter((l) => l && l.language && l.level)
+      .map((l) => ({ language: l.language, level: LEVEL_MAP[l.level] || l.level }));
+
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      name,
-      email: email.toLowerCase(),
-      passwordHash,
-      role: "user",
-    });
+    // The role is always "user" here. Admins are promoted by another admin.
+    const user = await User.create({ name, email: normalisedEmail, passwordHash, role: "user" });
 
-    // ── Build languagesLearning with CEFR levels ─
-    const languagesLearning = learningLanguages
-      .filter((l) => l.language && l.level)
-      .map((l) => ({
-        language: l.language,
-        level: LEVEL_MAP[l.level] || l.level, // accept CEFR directly too
-      }));
-
-    // ── Create Profile ───────────────────────────
-    const profile = await Profile.create({
-      user: user._id,
-      ageRange: getAgeRange(dateOfBirth),
-      gender: gender || undefined,
-      country,
-      city,
-      timezone: timezone || guessTimezone(country),
-      nativeLanguage,
-      languagesLearning,
-      interests,
-      bio: bio || undefined,
-    });
+    let profile;
+    try {
+      profile = await Profile.create({
+        user: user._id,
+        dateOfBirth: dateOfBirth || undefined,
+        gender: gender || undefined,
+        country,
+        city,
+        timezone: timezone || guessTimezone(country),
+        nativeLanguage,
+        languagesLearning,
+        interests: Array.isArray(interests) ? interests : [],
+        bio: bio || undefined,
+      });
+    } catch (profileError) {
+      await User.deleteOne({ _id: user._id });
+      throw profileError;
+    }
 
     return res.status(201).json({
       message: "User registered successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
       profile,
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// ─────────────────────────────────────────────
-// LOGIN
-// ─────────────────────────────────────────────
+// POST /api/auth/login
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
+    if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    // Same message for an unknown email and a wrong password.
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-
     if (user.isSuspended) {
-      return res
-        .status(403)
-        .json({ message: "Your account has been suspended" });
+      return res.status(403).json({ message: "Your account has been suspended" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     return res.json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
   }
 };
 
-// ─────────────────────────────────────────────
-// GET ME
-// ─────────────────────────────────────────────
+// GET /api/auth/me
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-passwordHash");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
     return res.json(user);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return fail(res, error);
+  }
+};
+
+// PUT /api/auth/me: change own display name
+exports.updateMe = async (req, res) => {
+  try {
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    if (!name) return res.status(400).json({ message: "Name is required" });
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { name } },
+      { returnDocument: "after", runValidators: true }
+    );
+    if (!user) return res.status(404).json({ message: "User not found" });
+    const { passwordHash, ...safe } = user.toObject();
+    return res.json(safe);
+  } catch (error) {
+    return fail(res, error);
   }
 };

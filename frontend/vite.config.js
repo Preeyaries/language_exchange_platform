@@ -10,4 +10,10 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
+  server: {
+    // In development, forward /api to the backend so the browser sees one origin.
+    proxy: {
+      '/api': 'http://localhost:5000',
+    },
+  },
 })

@@ -8,9 +8,9 @@ const profileSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    // Private. Other users only ever see the derived age range.
     dateOfBirth: {
       type: Date,
-      trim: true,
     },
     gender: {
       type: String,
