@@ -33,7 +33,7 @@ A feature showcase page is in [`docs/index.html`](docs/index.html). It can be se
 
 ## Design
 
-The screens were designed in Figma before they were built: [Language Exchange design file](https://www.figma.com/design/MRxutelQ8RnLTygvLTyd7t/Language-Exchange).
+The screen designs are in Figma: [Language Exchange design file](https://www.figma.com/design/MRxutelQ8RnLTygvLTyd7t/Language-Exchange).
 
 ## Tech stack
 
